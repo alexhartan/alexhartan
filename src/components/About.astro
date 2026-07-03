@@ -1,6 +1,7 @@
 ---
 import SectionHead from './SectionHead.astro';
 
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 const stats = [
   { value: 18, suffix: '+', label: 'Years in branding & UX' },
   { value: 8, suffix: '', label: 'Weeks from kickoff to launch' },
@@ -27,7 +28,7 @@ const stats = [
           class="group relative overflow-hidden rounded-2xl border border-line bg-panel will-change-transform"
         >
           <img
-            src="/images/portrait-about.jpg"
+            src={`${base}/images/portrait-about.jpg`}
             alt="Alex Hartan, arms crossed, smiling"
             width="1000"
             height="935"

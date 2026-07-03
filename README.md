@@ -61,6 +61,16 @@ src/
 
 ## Deploy
 
-Static output — `npm run build` and host `dist/` anywhere (Netlify, Vercel, Cloudflare
-Pages, GitHub Pages). Update `site` in `astro.config.mjs` if the final domain isn't
-`alexhartan.com`.
+Deploys automatically to **GitHub Pages** — `.github/workflows/deploy.yml` builds the site
+and publishes it on every push to `main` or the current default branch. Live at:
+
+> https://alexhartan.github.io/alexhartan/
+
+The build is fully static, so it can move anywhere (Netlify, Vercel, Cloudflare Pages)
+by hosting `dist/`.
+
+### Moving to a custom domain (e.g. alexhartan.com)
+
+1. In the repo: Settings → Pages → Custom domain, and add the DNS records GitHub asks for.
+2. In `astro.config.mjs`: set `site: 'https://alexhartan.com'` and remove `base`.
+3. Push — the workflow redeploys.
