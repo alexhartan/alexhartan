@@ -1,0 +1,62 @@
+---
+import SectionHead from './SectionHead.astro';
+
+const socials = [
+  { href: 'https://www.linkedin.com/in/alex-hartan/', label: 'LinkedIn' },
+  { href: 'https://dribbble.com/alexhartan', label: 'Dribbble' },
+  { href: 'https://www.instagram.com/alexhartan/', label: 'Instagram' },
+  { href: 'https://webflow.com/@alexhartan', label: 'Webflow' },
+  { href: 'https://www.galvanite.io', label: 'Galvanite' },
+];
+---
+
+<section id="contact" class="relative scroll-mt-24 overflow-hidden py-24 md:py-40">
+  <div
+    class="absolute top-1/2 left-1/2 h-[36rem] w-[60rem] max-w-none -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(84_110_255/0.16),transparent)] blur-2xl"
+    aria-hidden="true"
+  >
+  </div>
+
+  <div class="relative mx-auto max-w-[1400px] px-5 md:px-10">
+    <SectionHead index="06" label="Contact" />
+
+    <h2
+      class="font-display max-w-5xl text-4xl leading-[1.02] font-bold tracking-tight uppercase sm:text-6xl md:text-8xl"
+      data-words
+    >
+      Got a sharp product with a blunt brand?
+    </h2>
+
+    <div class="mt-12 md:mt-20" data-reveal>
+      <a
+        href="mailto:alex@galvanite.io"
+        class="link-fill font-display text-outline-volt inline-block px-1 text-[clamp(1.6rem,6.4vw,5.5rem)] font-bold tracking-tight break-all uppercase"
+      >
+        alex@galvanite.io
+      </a>
+    </div>
+
+    <div class="mt-14 flex flex-wrap items-center justify-between gap-8 border-t border-line pt-8 md:mt-20">
+      <p class="max-w-sm text-mute" data-reveal>
+        I take on a limited number of projects each year, so every one gets my full attention.
+        The sooner you write, the sooner we play.
+      </p>
+      <ul class="flex flex-wrap gap-3" data-reveal style="--d:.1s">
+        {
+          socials.map((s) => (
+            <li>
+              <a
+                href={s.href}
+                rel="noopener"
+                data-magnetic
+                class="font-display inline-block rounded-full border border-line px-5 py-2.5 text-[12px] font-semibold tracking-[0.16em] uppercase transition-colors duration-300 hover:border-volt hover:bg-volt hover:text-void"
+              >
+                {s.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>

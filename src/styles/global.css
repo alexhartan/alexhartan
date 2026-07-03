@@ -1,0 +1,324 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-void: #070a16;
+  --color-bg: #0a0f22;
+  --color-navy: #101732;
+  --color-panel: #131b3c;
+  --color-navy-2: #1b2447;
+  --color-ink: #f2f4fd;
+  --color-mute: #949cc2;
+  --color-volt: #ffd316;
+  --color-line: rgb(242 244 253 / 0.09);
+
+  --font-display: 'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-volt);
+  color: var(--color-void);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-volt);
+  outline-offset: 3px;
+}
+
+/* ---------- texture & backdrop ---------- */
+
+.noise::after {
+  content: '';
+  position: fixed;
+  inset: -50%;
+  z-index: 70;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.bg-grid {
+  background-image: linear-gradient(var(--color-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
+  background-size: 72px 72px;
+}
+
+/* ---------- display type ---------- */
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.text-outline {
+  -webkit-text-stroke: 1.5px var(--color-ink);
+  color: transparent;
+}
+
+.text-outline-volt {
+  -webkit-text-stroke: 1.5px var(--color-volt);
+  color: transparent;
+}
+
+@media (min-width: 768px) {
+  .text-outline,
+  .text-outline-volt {
+    -webkit-text-stroke-width: 2px;
+  }
+}
+
+/* ---------- reveal on scroll ---------- */
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 0.9s var(--ease-out-expo),
+    transform 0.9s var(--ease-out-expo);
+  transition-delay: var(--d, 0s);
+}
+
+[data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* word-by-word statement reveal */
+[data-words] .w {
+  display: inline-block;
+  opacity: 0.12;
+  transform: translateY(0.25em);
+  transition:
+    opacity 0.6s var(--ease-out-expo),
+    transform 0.6s var(--ease-out-expo);
+  transition-delay: var(--d, 0s);
+}
+
+[data-words].is-in .w {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- hero letters ---------- */
+
+.h-line {
+  overflow: hidden;
+  padding-block: 0.06em;
+}
+
+.h-letter {
+  display: inline-block;
+  transform: translateY(115%) rotate(4deg);
+  animation: letter-rise 0.9s var(--ease-out-expo) forwards;
+  animation-delay: calc(var(--i) * 42ms + 0.25s);
+}
+
+@keyframes letter-rise {
+  to {
+    transform: none;
+  }
+}
+
+/* ---------- marquee ---------- */
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 36s linear infinite;
+}
+
+.marquee-track.reverse {
+  animation-direction: reverse;
+}
+
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ---------- rotating badge ---------- */
+
+.spin-slow {
+  animation: spin 14s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* ---------- availability pulse ---------- */
+
+.pulse-dot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--color-volt);
+  animation: pulse-ring 2.2s var(--ease-out-expo) infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* ---------- service rows: volt sweep ---------- */
+
+.sweep {
+  position: relative;
+  isolation: isolate;
+}
+
+.sweep::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--color-volt);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.45s var(--ease-out-expo);
+}
+
+@media (hover: hover) {
+  .sweep:hover::before {
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+}
+
+/* ---------- big link underline fill ---------- */
+
+.link-fill {
+  background-image: linear-gradient(var(--color-volt), var(--color-volt));
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  background-position: 0 0;
+  transition: background-size 0.5s var(--ease-out-expo), color 0.3s ease;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+@media (hover: hover) {
+  .link-fill:hover {
+    background-size: 100% 100%;
+    color: var(--color-void);
+    -webkit-text-stroke-color: transparent;
+  }
+}
+
+/* ---------- custom cursor ---------- */
+
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  pointer-events: none;
+  border-radius: 9999px;
+  opacity: 0;
+}
+
+.cursor-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--color-volt);
+}
+
+.cursor-ring {
+  width: 38px;
+  height: 38px;
+  border: 1.5px solid rgb(255 211 22 / 0.55);
+  transition:
+    width 0.3s var(--ease-out-expo),
+    height 0.3s var(--ease-out-expo),
+    background-color 0.3s ease;
+}
+
+body.cursor-on .cursor-dot,
+body.cursor-on .cursor-ring {
+  opacity: 1;
+}
+
+body.cursor-hover .cursor-ring {
+  width: 64px;
+  height: 64px;
+  background: rgb(255 211 22 / 0.12);
+}
+
+@media (pointer: coarse) {
+  .cursor-dot,
+  .cursor-ring {
+    display: none;
+  }
+}
+
+/* ---------- nav ---------- */
+
+.nav-hidden {
+  transform: translateY(-100%);
+}
+
+/* ---------- reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal],
+  [data-words] .w {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .h-letter {
+    transform: none;
+    animation: none;
+  }
+
+  .marquee-track {
+    animation-duration: 160s;
+  }
+
+  .spin-slow,
+  .pulse-dot::before {
+    animation: none;
+  }
+
+  .cursor-dot,
+  .cursor-ring {
+    display: none;
+  }
+}

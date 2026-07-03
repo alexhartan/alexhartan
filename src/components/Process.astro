@@ -1,0 +1,62 @@
+---
+import SectionHead from './SectionHead.astro';
+
+const steps = [
+  {
+    n: '01',
+    title: 'Listen',
+    desc: 'Deep-dive into your product, your users and your ambitions. I do the homework before touching a single pixel.',
+  },
+  {
+    n: '02',
+    title: 'Sharpen',
+    desc: 'A strategy sprint that cuts the noise: what you stand for, who it’s for, and why anyone should care.',
+  },
+  {
+    n: '03',
+    title: 'Design',
+    desc: 'Identity and interface, crafted in Figma. Bold where it matters, invisible where it should be.',
+  },
+  {
+    n: '04',
+    title: 'Build',
+    desc: 'A clean, lightning-fast Webflow build you can run without me. QA’d, launched, handed over.',
+  },
+];
+---
+
+<section id="process" class="relative scroll-mt-24 bg-navy/40 py-24 md:py-36">
+  <div class="mx-auto max-w-[1400px] px-5 md:px-10">
+    <div class="flex flex-wrap items-end justify-between gap-6">
+      <SectionHead index="04" label="How I work" class="mb-0 md:mb-0" />
+      <p class="font-display mb-12 text-sm tracking-[0.2em] text-mute uppercase md:mb-16" data-reveal>
+        Kickoff → launch in ~8 weeks
+      </p>
+    </div>
+
+    <ol class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      {
+        steps.map((s, i) => (
+          <li
+            class="group relative overflow-hidden rounded-2xl border border-line bg-navy p-7 transition-[translate,border-color] duration-400 hover:-translate-y-2 hover:border-volt/50 md:p-8"
+            data-reveal
+            style={`--d:${i * 0.09}s`}
+          >
+            <span
+              class="font-display pointer-events-none absolute -top-7 -right-3 text-[7.5rem] leading-none font-bold text-ink/6 transition-colors duration-400 group-hover:text-volt/15"
+              aria-hidden="true"
+            >
+              {s.n}
+            </span>
+            <span class="absolute inset-x-0 top-0 h-0.75 origin-left scale-x-0 bg-volt transition-transform duration-500 group-hover:scale-x-100" />
+            <h3 class="font-display relative mt-14 text-2xl font-bold tracking-tight uppercase md:mt-20">
+              <span class="mr-2 text-sm align-middle text-volt">{s.n}</span>
+              {s.title}
+            </h3>
+            <p class="relative mt-3 text-[15px] leading-relaxed text-mute">{s.desc}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

@@ -1,0 +1,24 @@
+---
+// The AH monogram. `mono` renders the accent triangle in the current
+// text color instead of volt yellow (for use on yellow backgrounds).
+interface Props {
+  class?: string;
+  mono?: boolean;
+}
+const { class: className = 'h-8', mono = false } = Astro.props;
+---
+
+<svg
+  class={className}
+  viewBox="130 268 596 334"
+  xmlns="http://www.w3.org/2000/svg"
+  fill="currentColor"
+  role="img"
+  aria-label="AH — Alex Hartan"
+>
+  <polygon points="452,280 560,280 250,590 142,590"></polygon>
+  <polygon points="500,280 568,280 568,590 500,590"></polygon>
+  <polygon points="646,280 714,280 714,590 646,590"></polygon>
+  <polygon points="330,452 714,452 714,518 270,518"></polygon>
+  <polygon points="500,528 500,590 438,590" fill={mono ? 'currentColor' : '#FFD316'}></polygon>
+</svg>

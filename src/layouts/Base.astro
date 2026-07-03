@@ -1,0 +1,254 @@
+---
+import '@fontsource-variable/space-grotesk';
+import '@fontsource-variable/inter';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Alex Hartan ◥ Digital Craftsman — Brand Strategy, Identity & Webflow',
+  description = 'Alex Hartan is a digital craftsman from Craiova, Romania — 18+ years helping B2B startups look as sharp as the products they build. Brand strategy, visual identity and lightning-fast Webflow sites.',
+} = Astro.props;
+
+const og = new URL('/og.png', Astro.site ?? Astro.url);
+---
+
+<html lang="en" class="bg-bg">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" content="#0a0f22" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={Astro.site?.toString() ?? Astro.url.toString()} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={og} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={og} />
+  </head>
+
+  <body class="noise font-body min-h-screen">
+    <!-- scroll progress -->
+    <div
+      id="progress"
+      class="fixed inset-x-0 top-0 z-80 h-0.75 origin-left scale-x-0 bg-volt"
+      aria-hidden="true"
+    >
+    </div>
+
+    <!-- custom cursor -->
+    <div class="cursor-dot" aria-hidden="true"></div>
+    <div class="cursor-ring" aria-hidden="true"></div>
+
+    <slot />
+
+    <script>
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      /* ----- reveal on scroll ----- */
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) {
+              e.target.classList.add('is-in');
+              io.unobserve(e.target);
+            }
+          }
+        },
+        { threshold: 0.18, rootMargin: '0px 0px -8% 0px' },
+      );
+      document.querySelectorAll('[data-reveal], [data-words]').forEach((el) => io.observe(el));
+
+      /* ----- word split for big statements (keeps element children intact) ----- */
+      document.querySelectorAll<HTMLElement>('[data-words]').forEach((el) => {
+        let i = 0;
+        const wrap = (content: string | Element) => {
+          const s = document.createElement('span');
+          s.className = 'w';
+          s.style.setProperty('--d', `${i++ * 0.035}s`);
+          s.append(content);
+          return s;
+        };
+        [...el.childNodes].forEach((node) => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            const frag = document.createDocumentFragment();
+            (node.textContent ?? '')
+              .trim()
+              .split(/\s+/)
+              .filter(Boolean)
+              .forEach((w) => frag.append(wrap(w), ' '));
+            node.replaceWith(frag);
+          } else if (node instanceof Element) {
+            const s = wrap(node.cloneNode(true) as Element);
+            node.replaceWith(s);
+          }
+        });
+      });
+
+      /* ----- counters ----- */
+      const cio = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (!e.isIntersecting) continue;
+            cio.unobserve(e.target);
+            const el = e.target as HTMLElement;
+            const target = Number(el.dataset.count ?? '0');
+            const suffix = el.dataset.suffix ?? '';
+            if (reduced) {
+              el.textContent = target + suffix;
+              continue;
+            }
+            const t0 = performance.now();
+            const tick = (t: number) => {
+              const p = Math.min((t - t0) / 1400, 1);
+              el.textContent = Math.round(target * (1 - Math.pow(1 - p, 4))) + suffix;
+              if (p < 1) requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+          }
+        },
+        { threshold: 0.6 },
+      );
+      document.querySelectorAll('[data-count]').forEach((el) => cio.observe(el));
+
+      /* ----- scroll progress + nav hide/show ----- */
+      const progress = document.getElementById('progress');
+      const nav = document.getElementById('nav');
+      let lastY = scrollY;
+      let ticking = false;
+
+      const onScroll = () => {
+        const max = document.documentElement.scrollHeight - innerHeight;
+        if (progress) progress.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
+        if (nav) {
+          nav.classList.toggle('nav-scrolled', scrollY > 40);
+          const menuOpen = document.body.classList.contains('menu-open');
+          nav.classList.toggle('nav-hidden', !menuOpen && scrollY > lastY && scrollY > 160);
+        }
+        lastY = scrollY;
+        ticking = false;
+      };
+      addEventListener('scroll', () => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(onScroll);
+        }
+      });
+      onScroll();
+
+      /* ----- pointer-driven extras (fine pointers only) ----- */
+      if (matchMedia('(pointer: fine)').matches && !reduced) {
+        /* custom cursor */
+        const dot = document.querySelector<HTMLElement>('.cursor-dot');
+        const ring = document.querySelector<HTMLElement>('.cursor-ring');
+        let mx = -100;
+        let my = -100;
+        let rx = -100;
+        let ry = -100;
+
+        addEventListener('mousemove', (e) => {
+          mx = e.clientX;
+          my = e.clientY;
+          document.body.classList.add('cursor-on');
+          const overLink = (e.target as HTMLElement).closest('a, button, [data-cursor]');
+          document.body.classList.toggle('cursor-hover', !!overLink);
+        });
+        document.documentElement.addEventListener('mouseleave', () =>
+          document.body.classList.remove('cursor-on'),
+        );
+
+        const loop = () => {
+          rx += (mx - rx) * 0.16;
+          ry += (my - ry) * 0.16;
+          if (dot) dot.style.transform = `translate(${mx - 4}px, ${my - 4}px)`;
+          if (ring)
+            ring.style.transform = `translate(${rx - ring.offsetWidth / 2}px, ${ry - ring.offsetHeight / 2}px)`;
+          requestAnimationFrame(loop);
+        };
+        loop();
+
+        /* magnetic elements */
+        document.querySelectorAll<HTMLElement>('[data-magnetic]').forEach((el) => {
+          el.addEventListener('mousemove', (e) => {
+            const r = el.getBoundingClientRect();
+            const x = e.clientX - r.left - r.width / 2;
+            const y = e.clientY - r.top - r.height / 2;
+            el.style.transform = `translate(${x * 0.22}px, ${y * 0.22}px)`;
+          });
+          el.addEventListener('mouseleave', () => {
+            el.style.transition = 'transform .5s cubic-bezier(.16,1,.3,1)';
+            el.style.transform = '';
+            setTimeout(() => (el.style.transition = ''), 500);
+          });
+        });
+
+        /* parallax layers (hero) */
+        const layers = document.querySelectorAll<HTMLElement>('[data-parallax]');
+        if (layers.length) {
+          addEventListener('mousemove', (e) => {
+            const nx = e.clientX / innerWidth - 0.5;
+            const ny = e.clientY / innerHeight - 0.5;
+            layers.forEach((el) => {
+              const f = Number(el.dataset.parallax ?? '10');
+              el.style.translate = `${nx * f}px ${ny * f}px`;
+            });
+          });
+        }
+
+        /* tilt cards */
+        document.querySelectorAll<HTMLElement>('[data-tilt]').forEach((el) => {
+          el.addEventListener('mousemove', (e) => {
+            const r = el.getBoundingClientRect();
+            const x = (e.clientX - r.left) / r.width - 0.5;
+            const y = (e.clientY - r.top) / r.height - 0.5;
+            el.style.transform = `perspective(900px) rotateX(${-y * 5}deg) rotateY(${x * 5}deg)`;
+          });
+          el.addEventListener('mouseleave', () => {
+            el.style.transition = 'transform .6s cubic-bezier(.16,1,.3,1)';
+            el.style.transform = '';
+            setTimeout(() => (el.style.transition = ''), 600);
+          });
+        });
+      }
+
+      /* ----- mobile menu ----- */
+      const burger = document.getElementById('burger');
+      const menu = document.getElementById('menu');
+      const toggleMenu = (open?: boolean) => {
+        const on = open ?? !document.body.classList.contains('menu-open');
+        document.body.classList.toggle('menu-open', on);
+        document.body.style.overflow = on ? 'hidden' : '';
+        burger?.setAttribute('aria-expanded', String(on));
+        menu?.setAttribute('aria-hidden', String(!on));
+      };
+      burger?.addEventListener('click', () => toggleMenu());
+      menu?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => toggleMenu(false)));
+      addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') toggleMenu(false);
+      });
+
+      /* ----- local time (Craiova) ----- */
+      const clock = document.getElementById('clock');
+      if (clock) {
+        const fmt = new Intl.DateTimeFormat('en-GB', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Europe/Bucharest',
+        });
+        const tickClock = () => (clock.textContent = fmt.format(new Date()));
+        tickClock();
+        setInterval(tickClock, 10_000);
+      }
+    </script>
+  </body>
+</html>
