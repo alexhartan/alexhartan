@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <rect width="128" height="128" rx="24" fill="#1B2447"/>
-  <g transform="translate(64 66) scale(0.155) translate(-428 -435)">
-    <polygon points="452,280 560,280 250,590 142,590" fill="#fff"/>
-    <polygon points="500,280 568,280 568,590 500,590" fill="#fff"/>
-    <polygon points="646,280 714,280 714,590 646,590" fill="#fff"/>
-    <polygon points="330,452 714,452 714,518 270,518" fill="#fff"/>
-    <polygon points="500,528 500,590 438,590" fill="#FFD316"/>
-  </g>
+  <rect width="128" height="128" rx="24" fill="#162140"/>
+  <svg x="14" y="39" width="100" height="50" viewBox="0 0 639 320" fill="none">
+    <path d="M399.141 0H319.266V239.868H399.141V0Z" fill="white"/>
+    <path d="M319.268 0L399.144 22.3877L102.241 319.824H0L319.268 0Z" fill="white"/>
+    <path d="M319.498 159.912L639 159.464V239.868H239.623L319.498 159.912Z" fill="white"/>
+    <path d="M558.891 0H638.766V319.824H558.891V0Z" fill="white"/>
+    <path d="M399.141 240.044V320H319.266L399.141 240.044Z" fill="#FFD500"/>
+  </svg>
 </svg>

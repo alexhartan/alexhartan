@@ -1,6 +1,4 @@
 ---
-import SectionHead from './SectionHead.astro';
-
 const steps = [
   {
     n: '01',
@@ -25,38 +23,37 @@ const steps = [
 ];
 ---
 
-<section id="process" class="relative scroll-mt-24 bg-navy/40 py-24 md:py-36">
-  <div class="mx-auto max-w-[1400px] px-5 md:px-10">
+<section id="process" class="relative border-t border-line bg-ink py-24 md:py-36">
+  <div class="mx-auto max-w-[1500px] px-5 md:px-10">
     <div class="flex flex-wrap items-end justify-between gap-6">
-      <SectionHead index="04" label="How I work" class="mb-0 md:mb-0" />
-      <p class="font-display mb-12 text-sm tracking-[0.2em] text-mute uppercase md:mb-16" data-reveal>
+      <h2 class="font-display text-5xl uppercase md:text-8xl" data-reveal>
+        How I <span class="text-outline-volt">work</span>
+      </h2>
+      <p class="font-display mb-2 text-xs tracking-[0.24em] text-mute uppercase md:text-sm" data-reveal style="--d:.15s">
         Kickoff → launch in ~8 weeks
       </p>
     </div>
 
-    <ol class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+    <ol class="mt-14 grid gap-px border border-line bg-line sm:grid-cols-2 xl:grid-cols-4 md:mt-20">
       {
         steps.map((s, i) => (
-          <li
-            class="group relative overflow-hidden rounded-2xl border border-line bg-navy p-7 transition-[translate,border-color] duration-400 hover:-translate-y-2 hover:border-volt/50 md:p-8"
-            data-reveal
-            style={`--d:${i * 0.09}s`}
-          >
-            <span
-              class="font-display pointer-events-none absolute -top-7 -right-3 text-[7.5rem] leading-none font-bold text-ink/6 transition-colors duration-400 group-hover:text-volt/15"
-              aria-hidden="true"
-            >
-              {s.n}
-            </span>
-            <span class="absolute inset-x-0 top-0 h-0.75 origin-left scale-x-0 bg-volt transition-transform duration-500 group-hover:scale-x-100" />
-            <h3 class="font-display relative mt-14 text-2xl font-bold tracking-tight uppercase md:mt-20">
-              <span class="mr-2 text-sm align-middle text-volt">{s.n}</span>
+          <li class="group relative bg-ink p-8 md:p-10" data-reveal style={`--d:${i * 0.1}s`}>
+            <span class="absolute inset-x-0 top-0 h-0.75 origin-left scale-x-0 bg-volt transition-transform duration-500 group-hover:scale-x-100" aria-hidden="true" />
+            <span class="font-display text-6xl text-outline md:text-7xl" aria-hidden="true">{s.n}</span>
+            <h3 class="font-display mt-8 text-2xl uppercase md:mt-12 md:text-3xl">
+              <span class="mr-2 align-middle text-sm text-volt">{s.n}</span>
               {s.title}
             </h3>
-            <p class="relative mt-3 text-[15px] leading-relaxed text-mute">{s.desc}</p>
+            <p class="mt-3 text-[15px] leading-relaxed text-mute">{s.desc}</p>
           </li>
         ))
       }
     </ol>
+
+    <p class="mt-10 max-w-2xl text-mute" data-reveal>
+      Strategy, identity and website ship together as one tight
+      <span class="text-cream">8-week engagement</span> at
+      <a href="https://www.galvanite.io" rel="noopener" class="text-volt underline-offset-4 hover:underline">Galvanite</a>.
+    </p>
   </div>
 </section>

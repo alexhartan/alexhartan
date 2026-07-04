@@ -1,0 +1,70 @@
+---
+import Logo from './Logo.astro';
+
+const email = [...'alex@galvanite.io'];
+---
+
+<section id="contact" class="relative overflow-hidden border-t border-line bg-void">
+  <!-- kinetic marquee -->
+  <div class="border-b border-line py-6" aria-hidden="true">
+    <div class="marquee-track font-display text-2xl tracking-[0.08em] text-cream/25 uppercase md:text-4xl">
+      {
+        [0, 1].map(() => (
+          <span class="flex shrink-0 items-center">
+            {['Brand strategy', 'Visual identity', 'Webflow', 'Boardgames', 'Basketball'].map((w) => (
+              <span class="flex items-center">
+                <span class="px-6">{w}</span>
+                <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 100 100">
+                  <polygon points="100,0 100,100 0,100" fill="#FFD400" />
+                </svg>
+              </span>
+            ))}
+          </span>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="mx-auto max-w-[1500px] px-5 py-28 md:px-10 md:py-40">
+    <h2 class="font-display text-[clamp(2.6rem,8.5vw,8.5rem)] leading-[0.92] uppercase" data-reveal>
+      Got a sharp product
+      <span class="text-outline block">with a blunt brand?</span>
+    </h2>
+
+    <p class="mt-8 max-w-xl text-base leading-relaxed text-mute md:text-lg" data-reveal style="--d:.15s">
+      Tell me what you're building. If it deserves better than a template, we'll get along.
+    </p>
+
+    <a
+      href="mailto:alex@galvanite.io"
+      class="email-link font-display relative mt-14 inline-block max-w-full break-all text-[clamp(1.6rem,5.6vw,5.6rem)] leading-none tracking-tight text-cream md:mt-20"
+      data-reveal
+      style="--d:.25s"
+    >
+      {email.map((ch, i) => <span class="e-letter" style={`--i:${i}`}>{ch}</span>)}
+      <span class="e-underline" aria-hidden="true"></span>
+    </a>
+
+    <p class="font-display mt-10 flex items-center gap-3 text-[11px] tracking-[0.26em] text-mute uppercase" data-reveal style="--d:.35s">
+      <span class="relative flex h-2 w-2">
+        <span class="pulse-dot absolute inset-0" aria-hidden="true"></span>
+        <span class="relative h-2 w-2 rounded-full bg-volt"></span>
+      </span>
+      Booking new projects — Craiova, RO · working worldwide
+    </p>
+  </div>
+
+  <footer class="border-t border-line">
+    <div
+      class="font-display mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-6 px-5 py-8 text-[11px] tracking-[0.22em] text-mute uppercase md:px-10"
+    >
+      <a href="#top" aria-label="Back to top"><Logo class="h-6" /></a>
+      <span>Strategic design, not decoration.</span>
+      <span class="flex items-center gap-6">
+        <a href="https://www.linkedin.com/in/alex-hartan/" rel="noopener" class="transition-colors hover:text-volt">LinkedIn</a>
+        <a href="https://www.galvanite.io" rel="noopener" class="transition-colors hover:text-volt">Galvanite</a>
+        <span>© 2026 Alex Hartan</span>
+      </span>
+    </div>
+  </footer>
+</section>

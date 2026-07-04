@@ -1,0 +1,59 @@
+---
+const pillars = [
+  {
+    n: '01',
+    title: 'Brand Strategy',
+    desc: 'A focused two-week sprint that gives your brand a clear direction and a place in the world. Positioning, messaging, naming — decided, not debated.',
+    tags: ['Positioning', 'Messaging', 'Naming'],
+  },
+  {
+    n: '02',
+    title: 'Visual Identity',
+    desc: "A distinctive identity built to represent who you've become — with a digital styleguide that keeps it consistent everywhere your brand shows up.",
+    tags: ['Identity systems', 'Art direction', 'Styleguides'],
+  },
+  {
+    n: '03',
+    title: 'Web Design & Webflow',
+    desc: 'Bespoke design in Figma, shipped as a clean, lightning-fast Webflow build. Six to ten pages, static and dynamic, live in about eight weeks.',
+    tags: ['UX & UI', 'Webflow build', 'Interactions'],
+  },
+];
+---
+
+<section id="pillars" data-seq-section="pillars" class="relative h-svh overflow-hidden">
+  <canvas id="seq-pillars" class="absolute inset-0 h-full w-full" aria-hidden="true"></canvas>
+  <div class="absolute inset-0 bg-gradient-to-r from-void/90 via-void/40 to-transparent" aria-hidden="true"></div>
+
+  <div class="relative z-10 mx-auto flex h-full max-w-[1500px] flex-col justify-center px-5 md:px-10">
+    <p class="font-display mb-8 flex items-center gap-3 text-[11px] tracking-[0.28em] text-cream/70 uppercase md:text-[13px]">
+      <span class="text-volt">02</span> Three pillars — what I do
+    </p>
+
+    <div class="relative min-h-[24rem] max-w-2xl md:min-h-[26rem]">
+      {
+        pillars.map((p, i) => (
+          <article class="beat absolute inset-x-0 top-0" data-beat={`pillars-${i}`}>
+            <span class="font-display text-6xl text-outline-volt md:text-8xl">{p.n}</span>
+            <h3 class="font-display mt-4 text-4xl leading-[0.95] uppercase md:text-7xl">{p.title}</h3>
+            <p class="mt-6 max-w-xl text-base leading-relaxed text-cream/80 md:text-lg">{p.desc}</p>
+            <ul class="mt-6 flex flex-wrap gap-2">
+              {p.tags.map((t) => (
+                <li class="font-display border border-line bg-void/50 px-3 py-1 text-[11px] tracking-[0.16em] text-cream/80 uppercase backdrop-blur-sm">
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))
+      }
+    </div>
+
+    <!-- progress rail -->
+    <div class="mt-10 flex items-center gap-3" aria-hidden="true">
+      {pillars.map((_, i) => (
+        <span class="pillar-tick h-0.75 w-14 bg-line transition-colors duration-300" data-tick={`pillars-${i}`}></span>
+      ))}
+    </div>
+  </div>
+</section>

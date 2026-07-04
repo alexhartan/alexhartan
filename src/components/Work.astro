@@ -1,0 +1,70 @@
+---
+const projects = [
+  {
+    name: 'Tobiko Data',
+    pitch: 'Full rebrand for the team rethinking how modern data gets transformed.',
+    tags: ['Rebrand', 'Identity', 'Web'],
+  },
+  {
+    name: 'Quotient AI',
+    pitch: 'A sharper brand for the crew making AI agents actually trustworthy.',
+    tags: ['Rebrand', 'Identity', 'Web'],
+  },
+];
+---
+
+<section id="work" data-seq-section="work" class="relative h-svh overflow-hidden">
+  <canvas id="seq-work" class="absolute inset-0 h-full w-full" aria-hidden="true"></canvas>
+  <div class="absolute inset-0 bg-gradient-to-t from-void/95 via-void/30 to-void/50" aria-hidden="true"></div>
+
+  <div class="relative z-10 mx-auto flex h-full max-w-[1500px] flex-col justify-end px-5 pb-16 md:px-10 md:pb-20">
+    <!-- beat 1: off the clock -->
+    <div class="beat absolute inset-x-5 bottom-16 md:inset-x-10 md:bottom-20" data-beat="work-0">
+      <p class="font-display mb-4 flex items-center gap-3 text-[11px] tracking-[0.28em] text-cream/70 uppercase md:text-[13px]">
+        <span class="text-volt">03</span> Off the clock
+      </p>
+      <h3 class="font-display max-w-4xl text-4xl leading-[0.95] uppercase md:text-7xl">
+        Basketball keeps the eyes sharp.
+        <span class="text-outline block">Board games keep the strategy sharper.</span>
+      </h3>
+      <p class="mt-6 max-w-xl text-base leading-relaxed text-cream/80 md:text-lg">
+        Heavy euros, worker placement, one more turn. Pick-up games, pick-and-rolls, badly missed
+        threes. Same muscles as branding — trade-offs, positioning, reading people.
+      </p>
+    </div>
+
+    <!-- beat 2: the work -->
+    <div class="beat absolute inset-x-5 bottom-16 md:inset-x-10 md:bottom-20" data-beat="work-1">
+      <p class="font-display mb-4 flex items-center gap-3 text-[11px] tracking-[0.28em] text-cream/70 uppercase md:text-[13px]">
+        <span class="text-volt">04</span> On the record — recent work
+      </p>
+      <div class="grid gap-4 md:grid-cols-2 md:gap-6">
+        {
+          projects.map((w) => (
+            <a
+              href="mailto:alex@galvanite.io?subject=Tell%20me%20about%20the%20work"
+              class="work-card group relative overflow-hidden border border-line bg-navy/40 p-7 backdrop-blur-sm md:p-9"
+            >
+              <div class="flex items-start justify-between gap-4">
+                <h4 class="font-display text-3xl uppercase md:text-5xl">{w.name}</h4>
+                <span class="work-arrow font-display mt-1 text-2xl text-mute transition-all duration-500" aria-hidden="true">
+                  ↗
+                </span>
+              </div>
+              <p class="mt-4 max-w-md text-sm leading-relaxed text-cream/75 md:text-base">{w.pitch}</p>
+              <ul class="mt-6 flex flex-wrap gap-2">
+                {w.tags.map((t) => (
+                  <li class="font-display border border-line px-3 py-1 text-[10px] tracking-[0.16em] text-mute uppercase transition-colors group-hover:border-volt/40 group-hover:text-cream">
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="pointer-events-none mt-10 flex items-center gap-3 opacity-0" aria-hidden="true"></div>
+  </div>
+</section>

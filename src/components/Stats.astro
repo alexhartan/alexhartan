@@ -1,0 +1,27 @@
+---
+const stats = [
+  { value: '18', suffix: '+', label: 'Years in branding & UX' },
+  { value: '8', suffix: '', label: 'Weeks from kickoff to launch' },
+  { value: '2', suffix: '', label: 'Rebrands shipped this season' },
+  { value: '1', suffix: '', label: 'Lean studio. Zero agency bloat.' },
+  { value: '∞', suffix: '', label: 'Meeples moved & jumpers taken' },
+];
+---
+
+<section id="stats" class="relative border-y border-line bg-ink/80">
+  <div
+    class="mx-auto grid max-w-[1500px] grid-cols-2 divide-line px-5 py-14 max-md:gap-y-12 md:grid-cols-5 md:divide-x md:px-10 md:py-20"
+  >
+    {
+      stats.map((s, i) => (
+        <div class="flex flex-col gap-2 md:px-8 md:first:pl-0 md:last:pr-0" data-reveal style={`--d:${i * 0.08}s`}>
+          <span class="font-display text-5xl text-cream tabular-nums md:text-7xl">
+            <span data-count={/^\d+$/.test(s.value) ? s.value : null}>{/^\d+$/.test(s.value) ? '0' : s.value}</span
+            ><span class="text-volt">{s.suffix}</span>
+          </span>
+          <span class="font-display text-[11px] tracking-[0.22em] text-mute uppercase">{s.label}</span>
+        </div>
+      ))
+    }
+  </div>
+</section>

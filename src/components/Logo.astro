@@ -1,24 +1,21 @@
 ---
-// The AH monogram. `mono` renders the accent triangle in the current
-// text color instead of volt yellow (for use on yellow backgrounds).
-interface Props {
-  class?: string;
-  mono?: boolean;
-}
-const { class: className = 'h-8', mono = false } = Astro.props;
+// Alex's exact AH logo mark — original SVG paths, untouched.
+const { class: className = 'h-8' } = Astro.props;
 ---
 
 <svg
-  class={className}
-  viewBox="130 268 596 334"
+  width="639"
+  height="320"
+  viewBox="0 0 639 320"
+  fill="none"
   xmlns="http://www.w3.org/2000/svg"
-  fill="currentColor"
+  class={className}
   role="img"
   aria-label="AH — Alex Hartan"
 >
-  <polygon points="452,280 560,280 250,590 142,590"></polygon>
-  <polygon points="500,280 568,280 568,590 500,590"></polygon>
-  <polygon points="646,280 714,280 714,590 646,590"></polygon>
-  <polygon points="330,452 714,452 714,518 270,518"></polygon>
-  <polygon points="500,528 500,590 438,590" fill={mono ? 'currentColor' : '#FFD316'}></polygon>
+  <path d="M399.141 0H319.266V239.868H399.141V0Z" fill="white"></path>
+  <path d="M319.268 0L399.144 22.3877L102.241 319.824H0L319.268 0Z" fill="white"></path>
+  <path d="M319.498 159.912L639 159.464V239.868H239.623L319.498 159.912Z" fill="white"></path>
+  <path d="M558.891 0H638.766V319.824H558.891V0Z" fill="white"></path>
+  <path d="M399.141 240.044V320H319.266L399.141 240.044Z" fill="#FFD500"></path>
 </svg>
