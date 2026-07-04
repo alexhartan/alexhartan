@@ -1,0 +1,78 @@
+name: Extract scroll-scrub frames
+
+on:
+  workflow_dispatch:
+    inputs:
+      hero_url:
+        description: 'Hero clip mp4 URL'
+        required: true
+      pillars_url:
+        description: 'Pillars clip mp4 URL'
+        required: true
+      work_url:
+        description: 'Work clip mp4 URL'
+        required: true
+      fps:
+        description: 'Frames per second to extract'
+        required: false
+        default: '14'
+      width:
+        description: 'Frame width (16:9)'
+        required: false
+        default: '1600'
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Download clips
+        env:
+          HERO_URL: ${{ inputs.hero_url }}
+          PILLARS_URL: ${{ inputs.pillars_url }}
+          WORK_URL: ${{ inputs.work_url }}
+        run: |
+          mkdir -p /tmp/clips
+          curl -fsSL "$HERO_URL" -o /tmp/clips/hero.mp4
+          curl -fsSL "$PILLARS_URL" -o /tmp/clips/pillars.mp4
+          curl -fsSL "$WORK_URL" -o /tmp/clips/work.mp4
+          ls -la /tmp/clips
+
+      - name: Extract frames
+        env:
+          FPS: ${{ inputs.fps }}
+          WIDTH: ${{ inputs.width }}
+        run: |
+          HEIGHT=$(( WIDTH * 9 / 16 ))
+          rm -rf public/frames
+          for name in hero pillars work; do
+            mkdir -p "public/frames/$name"
+            ffmpeg -hide_banner -loglevel error -i "/tmp/clips/$name.mp4" \
+              -vf "fps=${FPS},scale=${WIDTH}:${HEIGHT}:flags=lanczos" \
+              -c:v libwebp -lossless 0 -compression_level 6 -q:v 62 \
+              "public/frames/$name/f-%04d.webp"
+            echo "$name: $(ls public/frames/$name | wc -l) frames"
+          done
+          python3 - <<'EOF'
+          import json, os
+          manifest = {}
+          for name in ["hero", "pillars", "work"]:
+              manifest[name] = {"count": len(os.listdir(f"public/frames/{name}"))}
+          with open("public/frames/manifest.json", "w") as f:
+              json.dump(manifest, f)
+          print(manifest)
+          EOF
+          du -sh public/frames/*
+
+      - name: Commit frames
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898024+github-actions[bot]@users.noreply.github.com"
+          git add public/frames
+          git commit -m "Add scroll-scrub frame sequences extracted from Seedance clips"
+          git push
