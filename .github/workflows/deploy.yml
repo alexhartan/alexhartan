@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - claude/alex-hartan-portfolio-61cyvm
+      - claude/alex-hartan-portfolio-vpk6be
   workflow_dispatch:
 
 permissions:
