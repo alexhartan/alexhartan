@@ -1,25 +1,13 @@
 name: Extract scroll-scrub frames
 
+# Runs when the frame job file changes on this branch; reads clip URLs from it,
+# extracts WebP frame sequences with ffmpeg, and commits them back to the branch.
 on:
-  workflow_dispatch:
-    inputs:
-      hero_url:
-        description: 'Hero clip mp4 URL'
-        required: true
-      pillars_url:
-        description: 'Pillars clip mp4 URL'
-        required: true
-      work_url:
-        description: 'Work clip mp4 URL'
-        required: true
-      fps:
-        description: 'Frames per second to extract'
-        required: false
-        default: '14'
-      width:
-        description: 'Frame width (16:9)'
-        required: false
-        default: '1600'
+  push:
+    branches:
+      - claude/alex-hartan-portfolio-vpk6be
+    paths:
+      - .frame-job.json
 
 jobs:
   extract:
@@ -28,26 +16,20 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref_name }}
 
       - name: Download clips
-        env:
-          HERO_URL: ${{ inputs.hero_url }}
-          PILLARS_URL: ${{ inputs.pillars_url }}
-          WORK_URL: ${{ inputs.work_url }}
         run: |
           mkdir -p /tmp/clips
-          curl -fsSL "$HERO_URL" -o /tmp/clips/hero.mp4
-          curl -fsSL "$PILLARS_URL" -o /tmp/clips/pillars.mp4
-          curl -fsSL "$WORK_URL" -o /tmp/clips/work.mp4
+          for name in hero pillars work; do
+            url=$(jq -r ".${name}_url" .frame-job.json)
+            curl -fsSL "$url" -o "/tmp/clips/$name.mp4"
+          done
           ls -la /tmp/clips
 
       - name: Extract frames
-        env:
-          FPS: ${{ inputs.fps }}
-          WIDTH: ${{ inputs.width }}
         run: |
+          FPS=$(jq -r '.fps // "14"' .frame-job.json)
+          WIDTH=$(jq -r '.width // "1600"' .frame-job.json)
           HEIGHT=$(( WIDTH * 9 / 16 ))
           rm -rf public/frames
           for name in hero pillars work; do
