@@ -8,6 +8,7 @@ on:
       - claude/alex-hartan-portfolio-vpk6be
     paths:
       - .frame-job.json
+      - .github/workflows/extract-frames.yml
 
 jobs:
   extract:
@@ -16,6 +17,12 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          ffmpeg -version | head -1
 
       - name: Download clips
         run: |
