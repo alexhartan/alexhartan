@@ -1,28 +1,36 @@
 ---
 import Base from '../layouts/Base.astro';
+import Preloader from '../components/Preloader.astro';
 import Nav from '../components/Nav.astro';
 import Hero from '../components/Hero.astro';
-import Marquee from '../components/Marquee.astro';
-import About from '../components/About.astro';
-import Services from '../components/Services.astro';
+import Stats from '../components/Stats.astro';
+import Pillars from '../components/Pillars.astro';
+import Work from '../components/Work.astro';
 import Process from '../components/Process.astro';
-import GalvaniteBand from '../components/GalvaniteBand.astro';
-import OffCourt from '../components/OffCourt.astro';
-import Contact from '../components/Contact.astro';
-import Footer from '../components/Footer.astro';
+import Finale from '../components/Finale.astro';
 ---
 
 <Base>
+  <Preloader />
   <Nav />
   <main>
     <Hero />
-    <Marquee />
-    <About />
-    <Services />
+    <Stats />
+    <Pillars />
+    <Work />
     <Process />
-    <GalvaniteBand />
-    <OffCourt />
-    <Contact />
+    <Finale />
   </main>
-  <Footer />
+  <script>
+    import '../scripts/main.js';
+  </script>
+  <noscript>
+    <style>
+      #preloader { display: none; }
+      .h-letter { transform: none; opacity: 1; }
+      [data-reveal] { opacity: 1; transform: none; }
+      .beat { position: static !important; opacity: 1; transform: none; pointer-events: auto; }
+      [data-seq-section] { height: auto !important; min-height: 100svh; }
+    </style>
+  </noscript>
 </Base>

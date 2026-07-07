@@ -1,158 +1,76 @@
 ---
-import Logo from './Logo.astro';
-
-const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 const first = [...'ALEX'];
 const last = [...'HARTAN'];
 ---
 
-<section id="top" class="relative flex min-h-svh flex-col justify-end overflow-hidden">
-  <!-- backdrop -->
-  <div class="bg-grid absolute inset-0" aria-hidden="true"></div>
-  <div
-    class="absolute -top-40 right-[-10%] h-[42rem] w-[42rem] rounded-full bg-[radial-gradient(closest-side,rgb(84_110_255/0.28),transparent)] blur-2xl"
-    data-parallax="24"
-    aria-hidden="true"
-  >
-  </div>
-  <div
-    class="absolute bottom-[-12rem] left-[-8rem] h-[30rem] w-[30rem] rounded-full bg-[radial-gradient(closest-side,rgb(255_211_22/0.10),transparent)] blur-2xl"
-    data-parallax="14"
-    aria-hidden="true"
-  >
-  </div>
-  <div class="absolute top-16 right-[-6rem] hidden opacity-[0.04] lg:block" data-parallax="34" aria-hidden="true">
-    <Logo class="h-[26rem] text-ink" mono />
-  </div>
+<section id="top" data-seq-section="hero" class="relative h-svh overflow-hidden">
+  <!-- scrubbed frame sequence -->
+  <canvas id="seq-hero" class="absolute inset-0 h-full w-full" aria-hidden="true"></canvas>
+  <div class="absolute inset-0 bg-gradient-to-t from-void via-transparent to-void/60" aria-hidden="true"></div>
 
-  <div class="relative mx-auto w-full max-w-[1400px] px-5 pt-32 pb-10 md:px-10 lg:pb-16">
-    <p
-      class="font-display mb-8 flex items-center gap-3 text-[13px] font-medium tracking-[0.22em] uppercase"
-      data-reveal
-    >
-      <svg class="h-3 w-3 shrink-0" viewBox="0 0 100 100" aria-hidden="true">
-        <polygon points="100,0 100,100 0,100" fill="#FFD316"></polygon>
-      </svg>
-      Brand strategist <span class="text-mute">&amp;</span> Webflow expert
-    </p>
+  <!-- name -->
+  <div class="relative z-10 flex h-full flex-col justify-end pb-24 md:justify-center md:pb-0">
+    <div class="mx-auto w-full max-w-[1500px] px-5 md:px-10">
+      <p
+        id="hero-eyebrow"
+        class="font-display mb-6 flex items-center gap-3 text-[11px] tracking-[0.28em] text-cream/80 uppercase md:text-[13px]"
+      >
+        <svg class="h-3 w-3 shrink-0" viewBox="0 0 100 100" aria-hidden="true">
+          <polygon points="100,0 100,100 0,100" fill="#FFD400"></polygon>
+        </svg>
+        Brand strategist <span class="text-mute">&amp;</span> Webflow expert — Founder of Galvanite
+      </p>
 
-    <h1 class="font-display text-[clamp(4.2rem,16vw,15rem)] leading-[0.84] font-bold tracking-[-0.03em] uppercase">
-      <span class="sr-only">Alex Hartan</span>
-      <span class="h-line block" aria-hidden="true">
-        {first.map((ch, i) => <span class="h-letter" style={`--i:${i}`}>{ch}</span>)}<span
-          class="h-letter ml-[0.05em] inline-block align-baseline"
-          style={`--i:${first.length}`}
-        >
-          <svg class="inline h-[0.13em] w-[0.13em]" viewBox="0 0 100 100" aria-hidden="true">
-            <polygon points="100,0 100,100 0,100" fill="#FFD316"></polygon>
-          </svg>
+      <h1
+        id="hero-title"
+        class="font-display text-[clamp(4rem,17.5vw,17rem)] leading-[0.85] tracking-[-0.01em] uppercase"
+      >
+        <span class="sr-only">Alex Hartan</span>
+        <span class="h-line" aria-hidden="true">
+          {first.map((ch, i) => <span class="h-letter" style={`--i:${i}`}>{ch}</span>)}
         </span>
-      </span>
-      <span class="h-line text-outline block" aria-hidden="true">
-        {last.map((ch, i) => (
-          <span class="h-letter" style={`--i:${i + first.length + 1}`}>
-            {ch}
-          </span>
-        ))}
-      </span>
-    </h1>
+        <span class="h-line" aria-hidden="true">
+          {last.map((ch, i) => (
+            <span class="h-letter text-outline" style={`--i:${i + first.length}`}>
+              {ch}
+            </span>
+          ))}
+        </span>
+      </h1>
 
-    <div class="mt-10 grid items-end gap-10 md:mt-14 lg:grid-cols-[1.3fr_1fr] lg:gap-16">
-      <div>
-        <p class="max-w-xl text-lg leading-relaxed text-mute md:text-xl" data-reveal style="--d:.5s">
-          Digital craftsman with <span class="text-ink">18+ years</span> in branding &amp; UX —
-          helping B2B startups look as sharp as the products they've built.
+      <div class="mt-8 flex flex-wrap items-end justify-between gap-6">
+        <p
+          id="hero-sub"
+          class="font-display text-sm tracking-[0.42em] text-volt uppercase md:text-lg"
+          style="--i: 11"
+        >
+          <span class="h-line"><span class="h-letter" style="--i:11">Digital Craftsman</span></span>
         </p>
-
-        <div class="mt-9 flex flex-wrap items-center gap-4" data-reveal style="--d:.65s">
-          <a
-            href="mailto:alex@galvanite.io"
-            data-magnetic
-            class="font-display inline-flex items-center gap-2 rounded-full bg-volt px-7 py-3.5 text-sm font-bold tracking-[0.12em] text-void uppercase transition-transform duration-300 hover:scale-[1.03]"
-          >
-            Start a project
-            <span aria-hidden="true">↗</span>
-          </a>
-          <a
-            href="#about"
-            data-magnetic
-            class="font-display inline-flex items-center gap-2 rounded-full border border-line px-7 py-3.5 text-sm font-semibold tracking-[0.12em] text-ink uppercase transition-colors duration-300 hover:border-volt hover:text-volt"
-          >
-            More about me
-          </a>
-        </div>
-      </div>
-
-      <!-- portrait -->
-      <div class="relative lg:-mt-40 lg:justify-self-end" data-reveal style="--d:.35s">
-        <figure
-          data-tilt
-          class="group relative w-full max-w-95 overflow-hidden rounded-2xl border border-line bg-panel will-change-transform"
-        >
-          <img
-            src={`${base}/images/portrait-hero.jpg`}
-            alt="Portrait of Alex Hartan"
-            width="900"
-            height="1015"
-            loading="eager"
-            fetchpriority="high"
-            class="block w-full object-cover grayscale-[35%] transition-[filter,transform] duration-700 group-hover:scale-[1.03] group-hover:grayscale-0"
-          />
-          <div
-            class="pointer-events-none absolute inset-0 bg-gradient-to-t from-bg/70 via-transparent to-transparent"
-            aria-hidden="true"
-          >
-          </div>
-          <figcaption
-            class="font-display absolute bottom-4 left-5 text-[11px] font-medium tracking-[0.24em] text-ink/80 uppercase"
-          >
-            Craiova, RO — working worldwide
-          </figcaption>
-          <svg class="absolute top-4 right-4 h-5 w-5" viewBox="0 0 100 100" aria-hidden="true">
-            <polygon points="100,0 100,100 0,100" fill="#FFD316"></polygon>
-          </svg>
-        </figure>
-
-        <!-- rotating badge -->
-        <a
-          href="#contact"
-          class="group absolute -bottom-9 -left-9 hidden h-32 w-32 place-items-center rounded-full bg-navy-2 shadow-2xl shadow-void/60 outline-1 outline-line sm:grid"
-          aria-label="Open for new projects — get in touch"
-        >
-          <svg class="spin-slow absolute inset-0 h-full w-full p-2" viewBox="0 0 100 100" aria-hidden="true">
-            <defs>
-              <path id="circ" d="M 50,50 m -38,0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0"></path>
-            </defs>
-            <text class="font-display fill-ink text-[10.5px] font-semibold tracking-[0.16em] uppercase">
-              <textPath href="#circ">Open for projects • Let's talk •</textPath>
-            </text>
-          </svg>
-          <span class="relative flex h-3.5 w-3.5">
-            <span class="pulse-dot absolute inset-0" aria-hidden="true"></span>
-            <span class="relative h-3.5 w-3.5 rounded-full bg-volt transition-transform group-hover:scale-125"></span>
-          </span>
-        </a>
+        <p id="hero-copy" class="max-w-sm text-sm leading-relaxed text-mute md:text-base" data-reveal style="--d:1.2s">
+          18+ years turning sharp B2B products into brands that finally look the part.
+        </p>
       </div>
     </div>
   </div>
 
-  <!-- bottom meta strip -->
-  <div class="relative border-t border-line" data-reveal style="--d:.85s">
-    <div
-      class="font-display mx-auto flex max-w-[1400px] items-center justify-between gap-6 px-5 py-4 text-[11px] tracking-[0.22em] text-mute uppercase md:px-10 md:text-xs"
-    >
-      <span class="hidden items-center gap-2 sm:flex">
-        <span class="relative flex h-2 w-2">
-          <span class="pulse-dot absolute inset-0" aria-hidden="true"></span>
-          <span class="relative h-2 w-2 rounded-full bg-volt"></span>
-        </span>
-        Booking new projects
-      </span>
-      <span>Founder of Galvanite ◥</span>
-      <a href="#about" class="flex items-center gap-2 transition-colors hover:text-volt">
-        Scroll
-        <span class="inline-block animate-bounce" aria-hidden="true">↓</span>
-      </a>
-    </div>
+  <!-- mid-scrub accent line -->
+  <div
+    id="hero-accent"
+    class="pointer-events-none absolute inset-0 z-20 grid place-items-center opacity-0"
+    aria-hidden="true"
+  >
+    <p class="font-display px-6 text-center text-[clamp(2rem,7vw,6.5rem)] leading-[1.02] uppercase">
+      <span class="block">Strategic design,</span>
+      <span class="text-outline-volt block">not decoration.</span>
+    </p>
+  </div>
+
+  <!-- scroll cue -->
+  <div
+    id="hero-cue"
+    class="font-display absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-3 text-[10px] tracking-[0.3em] text-mute uppercase"
+  >
+    Scroll to roll the camera
+    <span class="inline-block animate-bounce text-volt" aria-hidden="true">▼</span>
   </div>
 </section>

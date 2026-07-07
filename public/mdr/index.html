@@ -1,0 +1,899 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Macrodata Refinement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0F1F2E;
+    --fg: #80EAFF;
+    --bleed: rgba(128, 234, 255, 0.4);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+  body {
+    background: var(--bg);
+    font-family: 'VT323', monospace;
+    color: var(--fg);
+    font-size: 2vw;
+    text-shadow: 0 0 5px color-mix(in srgb, currentColor 60%, transparent);
+  }
+  #field {
+    position: fixed;
+    inset: 0;
+    touch-action: none;
+    cursor: url("data:image/svg+xml,%3Csvg%20width='26'%20height='36'%20viewBox='0%200%20104%20146'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3E%3Cpath%20d='M5%205L100%20100L42.5%20102.5L5%20141V5Z'%20fill='%230F1F2E'%20stroke='%2380EAFF'%20stroke-width='10'%20stroke-linejoin='bevel'/%3E%3C/svg%3E") 2 2, auto;
+  }
+  .cell {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .scale {
+    color: var(--fg);
+    transform-origin: center center;
+    will-change: transform;
+    transition: transform 0.75s cubic-bezier(0.249, 0.582, 0.209, 0.993),
+                opacity 0.75s cubic-bezier(0.249, 0.582, 0.209, 0.993),
+                color 0.75s cubic-bezier(0.249, 0.582, 0.209, 0.993);
+  }
+  .scale.sel {
+    color: #ffffff;
+  }
+  .float {
+    display: block;
+    line-height: 1;
+    user-select: none;
+    will-change: transform;
+  }
+  #hud {
+    position: fixed;
+    top: -1.25vw;
+    left: -1.25vw;
+    right: -1.25vw;
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    gap: 2.5vw;
+    padding: 2.25vw 4.25vw 1vw;
+    background: var(--bg);
+    border-bottom: 3px double var(--fg);   /* two 1px lines, 1px gap */
+  }
+  .name-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1vw;
+    border: 1px solid var(--fg);
+    padding: 0.5vw 1.375vw;
+  }
+  .puzzle {
+    font-size: 2.5vw;
+    letter-spacing: 0.04em;
+    color: var(--fg);
+    user-select: none;
+  }
+  .complete {
+    font-size: 1.875vw;
+    letter-spacing: 0.06em;
+    color: var(--fg);
+    user-select: none;
+  }
+  .lumon {
+    height: 3.75vw;
+    width: auto;
+    display: block;
+  }
+
+  #bins {
+    position: fixed;
+    left: -1.25vw;
+    right: -1.25vw;
+    bottom: -1.25vw;
+    z-index: 300;
+    display: flex;
+    justify-content: center;
+    gap: 1.8vw;                            /* +60% spacing between bins */
+    padding: 1.125vw 4.25vw 2.375vw;
+    background: var(--bg);
+    border-top: 3px double var(--fg);      /* two 1px lines, 1px gap */
+  }
+  .bin {
+    flex: 1 1 0;
+    max-width: 22.5vw;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5vw;
+  }
+  .bin-id {
+    height: 2.875vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--fg);
+  }
+  .bin-id span {
+    font-size: 2vw;
+    letter-spacing: 0.08em;
+    color: var(--fg);
+    user-select: none;
+  }
+  .bin-bar {
+    position: relative;
+    height: 2.5vw;
+    border: 1px solid var(--fg);
+    overflow: hidden;
+  }
+  .bin-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    background: var(--fg);
+  }
+  .bin-pct {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2vw;
+    letter-spacing: 0.04em;
+    color: var(--fg);
+    user-select: none;
+  }
+  .ghost-num {
+    position: fixed;
+    z-index: 400;
+    pointer-events: none;
+    color: #ffffff;
+    line-height: 1;
+    font-size: 2vw;
+    transform-origin: center center;
+  }
+  .ghost-num.drop {
+    transition: transform 0.45s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.45s ease-in;
+  }
+  @keyframes binGlitch {
+    0%   { transform: translateX(0); }
+    20%  { transform: translateX(-4px) skewX(-6deg); }
+    40%  { transform: translateX(4px); }
+    60%  { transform: translateX(-3px) skewX(5deg); }
+    80%  { transform: translateX(3px); }
+    100% { transform: translateX(0); }
+  }
+  @keyframes binFlicker {
+    0%, 100% { opacity: 1; }
+    25% { opacity: 0.25; }
+    50% { opacity: 0.85; }
+    75% { opacity: 0.1; }
+  }
+  .bin.glitch .bin-bar { animation: binGlitch 0.15s steps(2) 3; }
+  .bin.glitch .bin-fill { animation: binFlicker 0.12s steps(1) 4; }
+  #hud, #bins { box-shadow: 0 0 12px var(--bleed), inset 0 0 12px var(--bleed); }
+  .name-box, .bin-id, .bin-bar { box-shadow: 0 0 7px var(--bleed), inset 0 0 7px var(--bleed); }
+  .bin-fill { box-shadow: 0 0 8px rgba(128, 234, 255, 0.55); }
+  .lumon { filter: drop-shadow(0 0 5px rgba(128, 234, 255, 0.6)); }
+
+  /* ---- player entry / identity screen ---- */
+  #entry {
+    /* the field text size; button label and tagline derive from it */
+    --field-fs: 2.75vw;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: var(--bg);
+    display: flex;
+    align-items: center;      /* form centered on screen; */
+    justify-content: center;  /* logo + tagline are pinned separately */
+    padding: 1.5vw;
+    transition: opacity 0.6s ease;
+  }
+  #entry.hide { opacity: 0; pointer-events: none; }
+  .entry-logo {
+    position: absolute;
+    top: 7vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 13.125vw;
+    filter: drop-shadow(0 0 8px rgba(128, 234, 255, 0.6));
+  }
+  .entry-logo svg { display: block; width: 100%; height: auto; }
+  .entry-form {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1.375vw;
+    width: 47.5vw;
+  }
+  #name-input {
+    flex: 1 1 21.25vw;
+    min-width: 13.75vw;
+    background: transparent;
+    border: 1.5px solid var(--fg);
+    color: var(--fg);
+    caret-color: var(--fg);
+    font-family: 'VT323', monospace;
+    font-size: var(--field-fs);
+    letter-spacing: 0.03em;
+    padding: 0.625vw 1.375vw;
+    outline: none;
+    box-shadow: 0 0 7px var(--bleed), inset 0 0 7px var(--bleed);
+    text-shadow: 0 0 5px color-mix(in srgb, currentColor 60%, transparent);
+  }
+  #name-input::placeholder {
+    color: color-mix(in srgb, var(--fg) 55%, transparent);
+  }
+  #name-input:focus {
+    box-shadow: 0 0 12px var(--bleed), inset 0 0 12px var(--bleed);
+  }
+  #get-severed {
+    flex: 0 0 auto;
+    background: var(--fg);
+    color: var(--bg);                       /* navy label */
+    border: 1.5px solid var(--fg);
+    font-family: 'VT323', monospace;        /* match the field */
+    font-size: calc(var(--field-fs) * 0.7); /* 70% of field text */
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0 2.5vw;
+    cursor: inherit;
+    box-shadow: 0 0 10px rgba(128, 234, 255, 0.55);
+    transition: filter 0.15s ease, transform 0.05s ease;
+  }
+  #get-severed:hover { filter: brightness(1.12); }
+  #get-severed:active { transform: translateY(1px); }
+  .entry-tagline {
+    position: absolute;
+    bottom: 7vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    font-size: calc(var(--field-fs) * 0.7); /* same as the button label */
+    letter-spacing: 0.08em;
+    text-align: center;
+    color: color-mix(in srgb, var(--fg) 70%, transparent);
+    user-select: none;
+  }
+  @keyframes entryShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-9px); }
+    40% { transform: translateX(9px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+  }
+  #entry.shake .entry-form { animation: entryShake 0.32s ease; }
+
+  /* ---- end-game (Waffle Party) screen ---- */
+  #endscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: none;
+    background: var(--bg);
+    color: var(--fg);
+    padding: 4vw;
+    cursor: pointer;
+  }
+  #endscreen.show { display: block; }
+  .end-logo {
+    position: absolute;
+    top: 4vw;
+    left: 4vw;
+    width: 11.375vw;
+    filter: drop-shadow(0 0 8px rgba(128, 234, 255, 0.6));
+  }
+  .end-logo svg { display: block; width: 100%; height: auto; }
+  .end-video {
+    position: absolute;
+    top: 6vh;
+    right: 3.5vw;
+    width: 40vw;
+    height: auto;
+  }
+  .end-content {
+    position: absolute;
+    left: 4vw;
+    top: 24vh;
+    width: 52%;
+  }
+  .end-heading {
+    font-size: 2.5vw;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+    margin-bottom: 8vh;
+  }
+  .end-subhead {
+    font-size: 1.625vw;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.5vw;
+  }
+  .end-board { list-style: none; }
+  .end-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1vw;
+    padding: 1vh 0.25vw;
+    border-top: 1px solid color-mix(in srgb, var(--fg) 35%, transparent);
+    font-size: 1.75vw;
+  }
+  .end-row:last-child { border-bottom: 1px solid color-mix(in srgb, var(--fg) 35%, transparent); }
+  .end-praise {
+    position: absolute;
+    right: 4vw;
+    bottom: 3.375vw;
+    font-size: 2.5vw;
+    letter-spacing: 0.02em;
+  }
+  @media (max-width: 820px) {
+    #endscreen.show { display: flex; flex-direction: column; }
+    .end-logo, .end-video, .end-content, .end-praise { position: static; }
+    .end-video { width: min(60vw, 300px); margin: 60px auto 0; }
+    .end-content { width: auto; margin-top: 32px; }
+    .end-heading { margin-bottom: 28px; }
+    .end-praise { align-self: flex-end; margin-top: 20px; }
+  }
+</style>
+</head>
+<body>
+  <div id="entry">
+    <div class="entry-logo" id="entry-logo"></div>
+    <form class="entry-form" id="entry-form" autocomplete="off">
+      <input id="name-input" type="text" placeholder="Player Name" maxlength="24"
+             spellcheck="false" autocomplete="off" aria-label="Player name">
+      <button id="get-severed" type="submit">Get Severed</button>
+    </form>
+    <div class="entry-tagline">The work is mysterious and important.</div>
+  </div>
+  <header id="hud">
+    <div class="name-box">
+      <span class="puzzle">Cold Harbor</span>
+      <span class="complete">0% Complete</span>
+    </div>
+    <svg class="lumon" viewBox="0 0 324 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M206.619 74.5233C208.368 71.6427 212.126 65.4307 212.278 65.2213C212.92 64.334 213.558 64.3247 214.186 65.2133C214.499 65.6573 218.024 71.7127 219.654 74.174C222.694 78.7613 219.859 84.152 214.98 85.2207C214.426 85.342 213.796 85.2753 213.232 85.3487C209.229 85.2887 205.964 82.4247 205.636 78.6127C205.511 77.15 205.855 75.782 206.619 74.5233ZM192.624 87.6633C194.28 90.0627 196.676 90.932 199.492 90.93C208.591 90.9227 217.69 90.9273 226.788 90.926C227.1 90.926 227.412 90.918 227.724 90.9033C231.83 90.7087 234.928 87.7193 234.999 83.6153C235.098 77.876 235.078 72.1327 235.003 66.3927C234.96 63.074 232.862 60.3607 229.792 59.48C228.809 59.198 227.747 59.0927 226.72 59.0833C222.197 59.042 217.673 59.0653 213.15 59.0653C208.653 59.0653 204.156 59.052 199.658 59.0767C198.782 59.082 197.882 59.1367 197.033 59.3387C193.456 60.1907 191.342 62.9673 191.289 67.042C191.22 72.3413 191.264 77.6413 191.276 82.9413C191.28 84.6353 191.648 86.2487 192.624 87.6633Z" fill="#80E9FE"/>
+        <path d="M135.445 90.752C137.056 90.752 138.668 90.7527 140.279 90.752C141.485 90.7507 141.563 90.674 141.563 89.472C141.564 82.848 141.564 76.224 141.564 69.5993V68.674C141.631 68.6233 141.697 68.5727 141.765 68.522C142.005 68.7487 142.301 68.9393 142.477 69.208C146.966 76.014 151.454 82.82 155.905 89.65C156.436 90.466 157.031 90.8227 158.006 90.77C159.354 90.698 160.71 90.7127 162.059 90.7667C162.887 90.8 163.418 90.4933 163.857 89.808C165.355 87.4687 166.893 85.1547 168.415 82.8307C171.389 78.292 174.359 73.7507 177.344 69.2187C177.523 68.946 177.817 68.7487 178.059 68.516C178.126 68.5647 178.194 68.6127 178.261 68.6613V69.5873C178.261 76.2633 178.261 82.9393 178.263 89.6153C178.263 90.5933 178.419 90.7487 179.392 90.7507C181.186 90.7553 182.979 90.7553 184.773 90.7507C185.693 90.748 185.841 90.6007 185.841 89.646C185.844 79.8787 185.844 70.1107 185.841 60.3433C185.841 59.3753 185.694 59.2427 184.691 59.2413C182.118 59.2393 179.544 59.2793 176.972 59.22C176.025 59.1987 175.452 59.5167 174.937 60.306C170.209 67.5447 165.446 74.76 160.693 81.982C160.059 82.9447 159.769 82.9487 159.148 82.0047C154.367 74.7387 149.579 67.4767 144.814 60.2007C144.372 59.526 143.876 59.2067 143.037 59.2227C140.438 59.272 137.838 59.2393 135.239 59.2413C134.115 59.242 133.981 59.372 133.981 60.4873C133.979 65.1633 133.98 69.8393 133.98 74.5147C133.98 79.4507 133.98 84.386 133.98 89.322C133.981 90.696 134.039 90.752 135.445 90.752Z" fill="#80E9FE"/>
+        <path d="M241.876 90.7499C243.643 90.7565 245.41 90.7532 247.178 90.7519C248.312 90.7505 248.407 90.6545 248.407 89.4959C248.408 82.5092 248.408 75.5225 248.408 68.5359V67.3459C248.874 67.5752 249.224 67.6699 249.472 67.8825C250.852 69.0665 252.207 70.2792 253.572 71.4812C260.628 77.6979 267.682 83.9192 274.755 90.1165C275.116 90.4332 275.652 90.7105 276.114 90.7232C278.348 90.7859 280.584 90.7379 282.818 90.7599C283.566 90.7672 283.827 90.4339 283.826 89.7205C283.817 79.9032 283.822 70.0852 283.818 60.2679C283.817 59.4225 283.621 59.2452 282.736 59.2425C280.968 59.2365 279.202 59.2392 277.434 59.2412C276.299 59.2425 276.2 59.3432 276.2 60.4985C276.2 67.5112 276.2 74.5239 276.2 81.5365C276.2 81.8385 276.2 82.1412 276.2 82.6452C275.743 82.4099 275.396 82.3085 275.15 82.0932C270.751 78.2432 266.364 74.3805 261.976 70.5199C257.976 67.0025 253.972 63.4919 249.986 59.9592C249.406 59.4459 248.812 59.2059 248.025 59.2245C245.999 59.2725 243.971 59.2379 241.944 59.2419C241.013 59.2439 240.827 59.4139 240.827 60.3139C240.823 70.1052 240.823 79.8972 240.827 89.6892C240.828 90.5592 241.018 90.7465 241.876 90.7499Z" fill="#80E9FE"/>
+        <path d="M83.7228 83.9579C83.9955 87.3886 85.9881 89.7213 89.3415 90.4359C90.3235 90.6453 91.3481 90.7306 92.3541 90.7379C96.7215 90.7699 101.089 90.7519 105.456 90.7519C109.823 90.7519 114.19 90.7606 118.557 90.7446C119.386 90.7413 120.224 90.7013 121.041 90.5746C124.048 90.1086 126.196 88.5659 127.005 85.5246C127.243 84.6313 127.369 83.6813 127.373 82.7566C127.403 75.2753 127.392 67.7933 127.39 60.3113C127.389 59.3913 127.235 59.2446 126.281 59.2419C124.592 59.2373 122.902 59.2406 121.213 59.2406C119.861 59.2413 119.837 59.2646 119.837 60.6546C119.836 67.5133 119.837 74.3713 119.837 81.2299C119.836 84.0359 119.276 84.5959 116.455 84.5966C109.15 84.5979 101.845 84.5979 94.5408 84.5939C94.0995 84.5939 93.6561 84.5753 93.2188 84.5233C91.9555 84.3746 91.3161 83.7053 91.2188 82.4419C91.1928 82.1059 91.2041 81.7666 91.2041 81.4293C91.2035 74.4666 91.2035 67.5046 91.2035 60.5419C91.2028 59.2846 91.1581 59.2413 89.8715 59.2406C88.2335 59.2399 86.5961 59.2399 84.9581 59.2413C83.7228 59.2419 83.6468 59.3173 83.6468 60.5793C83.6455 67.7753 83.6448 74.9713 83.6495 82.1679C83.6501 82.7646 83.6755 83.3626 83.7228 83.9579Z" fill="#80E9FE"/>
+        <path d="M41.5094 90.7509C43.3801 90.7549 45.2514 90.7523 47.1221 90.7523C57.8021 90.7523 68.4821 90.7523 79.1621 90.7516C80.2441 90.751 80.3787 90.6189 80.3834 89.5503C80.3881 88.3816 80.3854 87.213 80.3847 86.045C80.3841 84.657 80.3254 84.5969 78.9374 84.5969C68.9587 84.5969 58.9801 84.5969 49.0021 84.5969H47.9141C47.9141 84.1736 47.9141 83.8436 47.9141 83.5143C47.9141 75.8276 47.9154 68.1409 47.9134 60.4543C47.9127 59.3389 47.8147 59.2423 46.7274 59.2409C44.9861 59.2389 43.2454 59.2376 41.5041 59.2416C40.4974 59.2443 40.3594 59.3756 40.3594 60.3529C40.3574 70.1169 40.3574 79.8816 40.3594 89.6456C40.3594 90.6196 40.4967 90.7489 41.5094 90.7509Z" fill="#80E9FE"/>
+        <path d="M213.111 137.982C225.257 134.677 236.93 130.202 247.798 123.796C250.813 122.02 253.669 119.974 256.611 118.073C256.939 117.861 257.356 117.666 257.733 117.665C265.139 117.638 272.545 117.641 279.951 117.64C280.126 117.64 280.301 117.667 280.733 117.702C280.122 118.033 279.715 118.266 279.298 118.478C270.528 122.922 261.391 126.453 252.019 129.391C241.905 132.561 231.615 135.014 221.185 136.884C218.554 137.355 215.915 137.785 213.278 138.224C212.967 138.276 212.646 138.276 212.329 138.296C212.589 138.187 212.842 138.055 213.111 137.982ZM212.226 138.314C212.115 138.353 212.004 138.392 211.893 138.43L211.879 138.314H212.226ZM181.995 140.444C192.699 135.845 201.15 128.526 207.751 119.015C208.45 118.008 209.136 117.635 210.371 117.64C224.092 117.688 237.813 117.664 251.533 117.66C251.861 117.66 252.188 117.66 252.571 117.819C252.201 118.076 251.838 118.342 251.463 118.588C241.728 124.998 231.191 129.704 220.131 133.289C211.152 136.199 201.988 138.337 192.649 139.7C188.601 140.291 184.536 140.768 180.479 141.298C180.463 141.23 180.448 141.163 180.433 141.096C180.954 140.879 181.477 140.667 181.995 140.444ZM128.437 128.932C124.929 125.888 121.853 122.446 119.116 118.697C118.933 118.446 118.761 118.185 118.589 117.926C118.567 117.89 118.578 117.833 118.568 117.732H205.535C205.419 117.933 205.337 118.112 205.225 118.268C198.748 127.246 190.641 134.229 180.312 138.438C173.527 141.202 166.46 142.374 159.128 141.915C147.373 141.179 137.257 136.584 128.437 128.932ZM112.178 138.32C112.174 138.348 112.169 138.377 112.165 138.406C112.057 138.377 111.947 138.348 111.839 138.32H112.178ZM92.5007 129.085C85.4167 126.131 78.622 122.623 72.232 118.356C71.996 118.199 71.7667 118.032 71.3973 117.773C71.7567 117.746 71.9687 117.715 72.1807 117.715C86.3453 117.711 100.511 117.712 114.676 117.695C115.18 117.695 115.459 117.852 115.74 118.266C120.992 126.005 127.491 132.459 135.609 137.172C137.957 138.536 140.481 139.598 142.925 140.797C143.151 140.908 143.385 141.004 143.615 141.108C137.45 140.67 131.357 139.83 125.307 138.696C114.051 136.588 103.08 133.498 92.5007 129.085ZM44.3113 117.72C51.6387 117.719 58.966 117.714 66.2933 117.73C66.6547 117.73 67.082 117.827 67.366 118.033C75.6887 124.087 84.754 128.756 94.3093 132.513C99.77 134.66 105.34 136.474 111.005 137.997C111.241 138.06 111.46 138.184 111.684 138.289C109.248 137.921 106.806 137.597 104.382 137.17C95.4087 135.588 86.5213 133.616 77.7587 131.11C66.4133 127.864 55.3587 123.852 44.814 118.512C44.4447 118.324 44.0787 118.128 43.7147 117.929C43.6813 117.911 43.672 117.848 43.6107 117.72C43.872 117.72 44.0913 117.72 44.3113 117.72ZM111.081 11.9757C101.181 14.6377 91.602 18.1491 82.4487 22.7837C77.2047 25.4391 72.1873 28.4657 67.428 31.9197C67.136 32.1311 66.7307 32.2957 66.3773 32.2964C58.9453 32.3197 51.5133 32.3164 44.0813 32.3164C43.9133 32.3164 43.7453 32.2944 43.5433 32.1517C43.9653 31.9284 44.384 31.6991 44.81 31.4831C55.0047 26.3191 65.6787 22.3917 76.6373 19.2097C86.7653 16.2684 97.0467 14.0011 107.458 12.3197C108.869 12.0917 110.287 11.9057 111.703 11.7011C111.497 11.7984 111.297 11.9177 111.081 11.9757ZM111.813 11.6764C111.925 11.6384 112.037 11.6004 112.149 11.5624C112.153 11.6004 112.157 11.6384 112.161 11.6764H111.813ZM142.198 9.4884C131.185 14.1704 122.593 21.7437 115.877 31.5431C115.471 32.1357 115.052 32.3151 114.365 32.3137C100.382 32.2977 86.3987 32.3051 72.4153 32.3077C72.1307 32.3077 71.8467 32.3077 71.562 32.3077C71.5353 32.2471 71.508 32.1857 71.4813 32.1251C72.6707 31.3551 73.8473 30.5644 75.0513 29.8191C85.498 23.3571 96.7413 18.7231 108.505 15.2911C116.667 12.9097 124.961 11.1477 133.382 9.9884C136.772 9.52107 140.175 9.14441 143.612 8.89041C143.141 9.08974 142.669 9.2884 142.198 9.4884ZM193.659 19.4351C198.173 23.0064 202.011 27.2197 205.356 31.8917C205.413 31.9717 205.453 32.0644 205.544 32.2291H118.433C119.117 31.3104 119.729 30.4524 120.377 29.6224C125.362 23.2424 131.291 17.9484 138.422 14.0584C144.113 10.9551 150.171 8.96041 156.631 8.28641C170.523 6.83707 182.792 10.8357 193.659 19.4351ZM212.364 11.7024C214.799 12.0704 217.241 12.3964 219.663 12.8244C228.615 14.4051 237.481 16.3704 246.224 18.8684C257.501 22.0897 268.489 26.0717 278.98 31.3551C279.454 31.5931 279.924 31.8397 280.349 32.2551C280.156 32.2551 279.963 32.2551 279.77 32.2551C272.413 32.2571 265.056 32.2624 257.699 32.2484C257.361 32.2477 256.957 32.1657 256.693 31.9731C248.304 25.8664 239.16 21.1724 229.521 17.3971C224.153 15.2944 218.675 13.5217 213.112 12.0104C212.854 11.9404 212.611 11.8117 212.364 11.7024ZM211.867 11.6891L211.877 11.5877C211.99 11.6164 212.103 11.6451 212.215 11.6737C212.099 11.6791 211.983 11.6837 211.867 11.6891ZM235.903 22.8144C241.394 25.3104 246.67 28.2104 251.695 31.5544C251.965 31.7344 252.225 31.9297 252.49 32.1177C252.475 32.1677 252.46 32.2171 252.445 32.2671C252.199 32.2671 251.953 32.2671 251.707 32.2671C237.619 32.2691 223.531 32.2677 209.443 32.2877C208.883 32.2884 208.564 32.1157 208.251 31.6557C203.008 23.9417 196.519 17.5137 188.423 12.8151C186.075 11.4517 183.551 10.3904 181.107 9.19174C180.885 9.08308 180.658 8.98641 180.453 8.83574C199.681 10.5684 218.274 14.7984 235.903 22.8144ZM30.5313 74.7391C30.4833 74.1191 30.1573 73.7937 29.5433 73.7571C29.31 73.7431 29.0753 73.7524 28.842 73.7524C22.1347 73.7524 15.428 73.7524 8.72134 73.7531H7.59C7.84133 72.0331 7.994 70.3884 8.33133 68.7824C9.598 62.7511 12.542 57.5457 16.398 52.8171C20.9567 47.2277 26.4513 42.6877 32.4207 38.6977C34.3407 37.4144 36.328 36.2311 38.3033 35.0317C38.6173 34.8411 39.0273 34.7191 39.3933 34.7177C47.27 34.6964 55.1467 34.6964 63.0233 34.6957C63.2187 34.6957 63.414 34.7311 63.6673 34.7551C62.0287 36.2351 60.4247 37.6304 58.8807 39.0884C55.9833 41.8237 53.3533 44.8004 51.004 48.0211C50.4113 48.8344 50.3893 49.3184 50.91 49.7157C51.4467 50.1251 52.6467 49.9517 53.0987 49.3917C54.2247 47.9971 55.3067 46.5657 56.4767 45.2104C59.7667 41.3991 63.5067 38.0651 67.506 35.0191C67.7533 34.8311 68.114 34.6984 68.4227 34.6977C83.396 34.6771 98.3693 34.6744 113.343 34.6704C113.444 34.6704 113.545 34.6891 113.767 34.7104C113.627 34.9777 113.524 35.1964 113.401 35.4044C111.01 39.4631 109.048 43.7217 107.453 48.1511C107.105 49.1191 107.243 49.6484 107.881 49.8631C108.815 50.1771 109.541 49.8477 109.865 48.9377C111.562 44.1791 113.74 39.6537 116.377 35.3444C116.682 34.8457 116.996 34.6431 117.603 34.6431C147.211 34.6517 176.82 34.6431 206.429 34.6157C207.04 34.6151 207.343 34.8264 207.647 35.3211C210.275 39.6057 212.447 44.1051 214.137 48.8377C214.499 49.8484 215.011 50.1257 216.056 49.8864C216.708 49.7377 216.971 49.1877 216.657 48.4051C215.695 45.9984 214.771 43.5717 213.686 41.2197C212.668 39.0111 211.463 36.8884 210.314 34.6771C210.511 34.6624 210.727 34.6317 210.943 34.6317C225.761 34.6271 240.578 34.6217 255.395 34.6411C255.794 34.6411 256.26 34.8171 256.581 35.0611C261.966 39.1551 266.81 43.7971 270.841 49.2524C271.303 49.8764 272.219 50.1284 272.917 49.8431C273.551 49.5831 273.698 48.8877 273.178 48.2284C271.813 46.4944 270.535 44.6691 269.001 43.0957C266.338 40.3651 263.51 37.7957 260.75 35.1597C260.603 35.0197 260.445 34.8897 260.197 34.6711C260.517 34.6491 260.732 34.6211 260.947 34.6211C268.772 34.6177 276.597 34.6137 284.421 34.6257C284.767 34.6264 285.158 34.6931 285.451 34.8624C292.565 38.9811 299.219 43.7091 304.899 49.7011C309.232 54.2717 312.767 59.3571 314.792 65.3844C315.688 68.0537 316.247 70.7891 316.332 73.7444H315.405C308.568 73.7444 301.731 73.7437 294.895 73.7457C293.747 73.7457 293.415 74.1204 293.511 75.2651C293.563 75.8857 293.899 76.2024 294.511 76.2357C294.718 76.2464 294.927 76.2397 295.135 76.2397C301.867 76.2397 308.6 76.2391 315.333 76.2391C315.64 76.2391 315.947 76.2391 316.453 76.2391C316.199 77.9677 316.044 79.6137 315.706 81.2217C314.445 87.2264 311.517 92.4117 307.683 97.1244C303.115 102.74 297.602 107.298 291.609 111.301C289.711 112.57 287.743 113.736 285.794 114.928C285.522 115.094 285.171 115.216 284.857 115.217C276.851 115.234 268.844 115.232 260.837 115.232C260.738 115.232 260.638 115.214 260.37 115.188C261.422 114.274 262.371 113.474 263.293 112.645C266.882 109.425 270.156 105.916 273.001 102.018C273.633 101.152 273.66 100.664 273.114 100.265C272.565 99.8637 271.391 100.058 270.927 100.615C269.246 102.627 267.624 104.693 265.863 106.633C263.079 109.699 259.939 112.39 256.635 114.881C256.303 115.131 255.779 115.227 255.345 115.228C240.631 115.249 225.918 115.25 211.205 115.253C210.947 115.254 210.689 115.253 210.281 115.253C210.465 114.914 210.585 114.672 210.721 114.44C213.085 110.426 215.013 106.209 216.591 101.83C216.937 100.871 216.789 100.332 216.148 100.125C215.201 99.8191 214.5 100.144 214.171 101.067C212.491 105.775 210.343 110.257 207.737 114.524C207.421 115.041 207.099 115.274 206.457 115.274C176.848 115.275 147.239 115.294 117.631 115.332C116.995 115.332 116.663 115.114 116.345 114.594C113.739 110.326 111.578 105.85 109.9 101.141C109.545 100.146 109.001 99.8584 107.971 100.108C107.347 100.259 107.081 100.798 107.357 101.53C108.006 103.252 108.599 105.005 109.388 106.664C110.679 109.378 112.109 112.028 113.481 114.704C113.562 114.864 113.642 115.024 113.767 115.27C113.491 115.293 113.275 115.326 113.059 115.326C98.242 115.332 83.4247 115.339 68.6073 115.324C68.228 115.324 67.7813 115.176 67.4807 114.947C62.0967 110.851 57.2467 106.216 53.216 100.759C52.746 100.123 51.864 99.8657 51.1473 100.138C50.5067 100.382 50.3407 101.094 50.85 101.744C52.1787 103.441 53.422 105.228 54.9193 106.765C57.598 109.516 60.4387 112.109 63.2133 114.767C63.3607 114.908 63.5207 115.037 63.786 115.27C63.478 115.304 63.2953 115.343 63.1133 115.344C55.2367 115.348 47.36 115.352 39.4833 115.34C39.1647 115.34 38.8073 115.254 38.5333 115.096C31.442 110.989 24.8127 106.27 19.1493 100.299C14.816 95.7304 11.2793 90.6457 9.25335 84.6184C8.41401 82.1231 7.87134 79.5664 7.73734 76.9304C7.72733 76.7304 7.73601 76.5291 7.73601 76.2477C8.09135 76.2477 8.39666 76.2477 8.702 76.2477C15.5133 76.2477 22.324 76.2477 29.1347 76.2464C30.2933 76.2464 30.6193 75.8844 30.5313 74.7391ZM268.76 126.039C269.135 125.886 269.509 125.732 269.883 125.576C270.366 125.374 270.843 125.17 271.32 124.966C271.695 124.804 272.071 124.643 272.445 124.479C273.007 124.233 273.562 123.985 274.115 123.735C274.346 123.631 274.577 123.527 274.808 123.421C302.229 110.896 319.115 93.8224 319.115 74.9997C319.115 61.5304 310.462 48.9571 295.497 38.3037C295.493 38.3011 295.489 38.2984 295.485 38.2957C294.802 37.8097 294.105 37.3277 293.397 36.8497C293.391 36.8457 293.385 36.8417 293.38 36.8384C289.235 34.0457 284.65 31.3937 279.665 28.9011C274.885 26.5004 269.984 24.3704 264.989 22.4571C257.978 19.7597 250.418 17.3364 242.399 15.2171C242.125 15.1444 241.85 15.0737 241.575 15.0017C240.783 14.7951 239.986 14.5904 239.184 14.3897C238.655 14.2571 238.127 14.1257 237.597 13.9971C236.851 13.8151 236.099 13.6377 235.345 13.4611C234.983 13.3771 234.622 13.2897 234.259 13.2071C220.303 10.0004 205.123 7.69374 189.111 6.45974C189.023 6.4424 188.936 6.42441 188.849 6.40841H188.411C179.823 5.76507 171.002 5.42441 162 5.42441C152.998 5.42441 144.177 5.76507 135.589 6.40841H135.192C135.132 6.42107 135.073 6.4364 135.014 6.45107C61.1013 12.1171 4.88535 40.6497 4.88535 74.9997C4.88535 98.7311 31.7227 119.684 72.6833 132.241C72.876 132.3 73.0687 132.36 73.262 132.418C98.5127 140.086 129.071 144.575 162 144.575C202.191 144.575 238.849 137.889 266.633 126.896C266.795 126.833 266.956 126.77 267.117 126.706C267.669 126.486 268.215 126.263 268.76 126.039Z" fill="#80E9FE"/>
+      </svg>
+  </header>
+  <main id="field" aria-hidden="true"></main>
+  <footer id="bins">
+    <div class="bin">
+      <div class="bin-id"><span>01</span></div>
+      <div class="bin-bar"><div class="bin-fill"></div><span class="bin-pct"></span></div>
+    </div>
+    <div class="bin">
+      <div class="bin-id"><span>02</span></div>
+      <div class="bin-bar"><div class="bin-fill"></div><span class="bin-pct"></span></div>
+    </div>
+    <div class="bin">
+      <div class="bin-id"><span>03</span></div>
+      <div class="bin-bar"><div class="bin-fill"></div><span class="bin-pct"></span></div>
+    </div>
+    <div class="bin">
+      <div class="bin-id"><span>04</span></div>
+      <div class="bin-bar"><div class="bin-fill"></div><span class="bin-pct"></span></div>
+    </div>
+    <div class="bin">
+      <div class="bin-id"><span>05</span></div>
+      <div class="bin-bar"><div class="bin-fill"></div><span class="bin-pct"></span></div>
+    </div>
+  </footer>
+  <div id="ghost-layer"></div>
+  <div id="endscreen" aria-hidden="true">
+    <div class="end-logo" id="end-logo"></div>
+    <video class="end-video" autoplay loop muted playsinline>
+      <source src="waffleparty.mp4" type="video/mp4">
+    </video>
+    <div class="end-content">
+      <p class="end-heading"><span id="end-name">Refiner</span>, the Board acknowledges your completed file. Your steadfast industry has authorized a Waffle Party!</p>
+      <p class="end-subhead">The exemplary yields of your fellow Refiners:</p>
+      <ul class="end-board" id="end-board"></ul>
+    </div>
+    <div class="end-praise">Praise Kier!</div>
+  </div>
+  <script>
+    const COLS = 14, ROWS = 8;          // visible matrix
+    const BUF = 1;                       // buffer ring for seamless scroll
+    const POOL_C = COLS + BUF * 2;
+    const POOL_R = ROWS + BUF * 2;
+    const MAX_SCALE = 6;
+    let RADIUS = 258, logDenom = Math.log(1 + RADIUS);   // proximity radius, viewport-relative (set in sizeCells)
+
+    const field = document.getElementById('field');
+    let cellW = 0, cellH = 0;
+    let offX = 0, offY = 0;              // rendered pan offset (eased)
+    let targetX = 0, targetY = 0;        // pan target driven by wheel
+    let lastT = 0;
+    const EASE_TAU = 0.25;               // ~0.75s trailing settle, matches hover feel
+    let mx = -9999, my = -9999;
+    let panning = false, selecting = false;
+    let panVX = 0, panVY = 0, lastPanT = 0;   // middle-drag velocity for release momentum
+    let dragging = false, downX = 0, downY = 0, downKey = null;
+    const selected = new Set();           // world-coord keys "wc,wr"
+    const draggingKeys = new Set();       // selected keys currently lifted (rendered empty)
+    const bump = new Map();               // world key -> refresh count (changes the digit)
+    const ghostLayer = document.getElementById('ghost-layer');
+    let ghosts = [];
+
+    // bins / progress
+    const bins = [...document.querySelectorAll('.bin')].map((el, i) => {
+      el.dataset.idx = i;
+      return { el, pct: 0, fill: el.querySelector('.bin-fill'), pctEl: el.querySelector('.bin-pct') };
+    });
+    function applyBin(i) {
+      const b = bins[i];
+      b.fill.style.width = b.pct + '%';
+      b.pctEl.textContent = b.pct + '%';
+      b.pctEl.style.color = b.pct >= 50 ? 'var(--bg)' : 'var(--fg)';  // readable once the fill covers it
+    }
+    function updateGlobal() {
+      const avg = Math.round(bins.reduce((s, b) => s + b.pct, 0) / bins.length);
+      document.querySelector('.complete').textContent = avg + '% Complete';
+    }
+    function selectionSum() {
+      let s = 0;
+      for (const k of selected) {
+        const [c, r] = k.split(',').map(Number);
+        s += digitAt(c, r);
+      }
+      return s;
+    }
+    function tween(from, to, dur, cb, done) {
+      const start = performance.now();
+      (function step(now) {
+        const t = Math.min((now - start) / dur, 1);
+        const e = 1 - Math.pow(1 - t, 3);
+        cb(from + (to - from) * e);
+        if (t < 1) requestAnimationFrame(step);
+        else if (done) done();
+      })(performance.now());
+    }
+    function animateBin(i, from, to, dur, done) {
+      const b = bins[i];
+      tween(from, to, dur || 600, v => {
+        b.fill.style.width = v + '%';
+        b.pctEl.textContent = Math.round(v) + '%';
+        b.pctEl.style.color = v >= 50 ? 'var(--bg)' : 'var(--fg)';  // navy over the cyan fill
+      }, done);
+    }
+    function animateGlobal() {
+      const el = document.querySelector('.complete');
+      const from = parseInt(el.textContent, 10) || 0;
+      const to = Math.round(bins.reduce((s, b) => s + b.pct, 0) / bins.length);
+      tween(from, to, 600, v => { el.textContent = Math.round(v) + '% Complete'; });
+    }
+    function depositToBin(i) {
+      if (!selected.size) return;
+      const b = bins[i];
+      if (b.pct >= 100 || b.busy) return;            // exactly full, or mid-animation: unavailable
+      const from = b.pct;
+      const total = from + selectionSum();
+      for (const k of selected) bump.set(k, (bump.get(k) || 0) + 1);  // refresh with new numbers
+      selected.clear();
+      draggingKeys.clear();
+      if (total > 100) {                             // went over: fill, glitch, restart at the overage
+        const over = total - 100;
+        b.busy = true;
+        animateBin(i, from, 100, 250, () => {
+          b.el.classList.add('glitch');
+          setTimeout(() => {
+            b.el.classList.remove('glitch');
+            b.pct = over;
+            animateBin(i, 0, over, 500, () => { b.busy = false; });
+            animateGlobal();
+            persistScores();
+          }, 450);
+        });
+      } else {
+        b.pct = total;                               // under 100, or exactly 100 (locks)
+        animateBin(i, from, b.pct);
+        animateGlobal();
+        persistScores();
+        checkComplete();                             // all bins full → Waffle Party
+      }
+    }
+
+    function makeGhosts() {
+      clearGhosts();
+      for (const k of draggingKeys) {
+        const [c, r] = k.split(',').map(Number);
+        const g = document.createElement('div');
+        g.className = 'ghost-num';
+        g.textContent = digitAt(c, r);
+        g.dataset.cx = c * cellW - offX + cellW / 2;
+        g.dataset.cy = r * cellH - offY + cellH / 2;
+        g.style.left = g.dataset.cx + 'px';
+        g.style.top = g.dataset.cy + 'px';
+        g.style.transform = 'translate(-50%, -50%) scale(3.5)';
+        ghostLayer.appendChild(g);
+        ghosts.push(g);
+      }
+    }
+    function moveGhosts(dx, dy) {
+      for (const g of ghosts) {
+        g.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(3.5)`;
+      }
+    }
+    function clearGhosts() { for (const g of ghosts) g.remove(); ghosts = []; }
+    function flightToBin(i) {
+      const rect = bins[i].el.getBoundingClientRect();
+      const bx = rect.left + rect.width / 2;
+      const by = rect.top + rect.height / 2;
+      for (const g of ghosts) {
+        const tx = bx - parseFloat(g.dataset.cx);
+        const ty = by - parseFloat(g.dataset.cy);
+        g.classList.add('drop');
+        g.style.opacity = '0';
+        g.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(0.2)`;
+      }
+      setTimeout(() => { clearGhosts(); depositToBin(i); }, 460);
+    }
+    function abortDrag() { clearGhosts(); draggingKeys.clear(); }
+    function transferWithFlight(i) {
+      if (!selected.size || bins[i].pct >= 100 || bins[i].busy) return;
+      draggingKeys.clear();
+      for (const s of selected) draggingKeys.add(s);
+      makeGhosts();
+      flightToBin(i);
+    }
+    bins.forEach((b, i) => applyBin(i));
+    bins.forEach((b, i) => b.el.addEventListener('click', () => transferWithFlight(i)));
+    updateGlobal();
+
+    // deterministic pseudo-random per world coordinate
+    function hash2(c, r, salt) {
+      let h = (Math.imul(c, 374761393) + Math.imul(r, 668265263) + Math.imul(salt, 2246822519)) | 0;
+      h = Math.imul(h ^ (h >>> 15), 2246822519);
+      h = Math.imul(h ^ (h >>> 13), 3266489917);
+      h = (h ^ (h >>> 16)) >>> 0;
+      return h / 4294967295;
+    }
+    const digitAt = (c, r) => Math.floor(hash2(c, r, bump.get(c + ',' + r) || 0) * 10);
+
+    // build the recycled cell pool
+    const pool = [];
+    for (let n = 0; n < POOL_C * POOL_R; n++) {
+      const root = document.createElement('div');
+      root.className = 'cell';
+      const scaleEl = document.createElement('div');
+      scaleEl.className = 'scale';
+      const floatEl = document.createElement('span');
+      floatEl.className = 'float';
+      scaleEl.appendChild(floatEl);
+      root.appendChild(scaleEl);
+      field.appendChild(root);
+      pool.push({ root, scaleEl, floatEl, lastDigit: -1, lastSel: false });
+    }
+
+    function sizeCells() {
+      cellW = window.innerWidth / COLS;
+      cellH = window.innerHeight / ROWS;
+      RADIUS = Math.min(window.innerWidth, window.innerHeight) * 0.258;  // scales with viewport
+      logDenom = Math.log(1 + RADIUS);
+      for (const c of pool) {
+        c.root.style.width = cellW + 'px';
+        c.root.style.height = cellH + 'px';
+      }
+    }
+    window.addEventListener('resize', sizeCells);
+    sizeCells();
+
+    function keyUnder() {
+      if (mx < 0) return null;
+      const wc = Math.floor((mx + offX) / cellW);
+      const wr = Math.floor((my + offY) / cellH);
+      return wc + ',' + wr;
+    }
+    function selectAtCursor() {
+      const k = keyUnder();
+      if (!k || selected.has(k) || selected.size >= 8) return;
+      selected.add(k);
+    }
+
+    field.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      if (panning) {
+        targetX -= e.movementX;                 // grab: canvas follows the hand
+        targetY -= e.movementY;
+        const now = performance.now();
+        const dt = Math.max(now - lastPanT, 1);
+        panVX = -e.movementX / dt * 1000;       // px/s for release momentum
+        panVY = -e.movementY / dt * 1000;
+        lastPanT = now;
+      }
+      if (selecting) selectAtCursor();
+    });
+    field.addEventListener('mouseleave', () => { mx = -9999; my = -9999; });
+    field.addEventListener('mousedown', e => {
+      if (e.button === 1) { e.preventDefault(); panning = true; selected.clear(); panVX = 0; panVY = 0; lastPanT = performance.now(); }   // middle: grab to pan
+      else if (e.button === 0) {
+        mx = e.clientX; my = e.clientY;
+        downX = e.clientX; downY = e.clientY;
+        const k = keyUnder();
+        if (k && selected.has(k)) {            // lift the selection and follow the cursor
+          dragging = true;
+          downKey = k;
+          draggingKeys.clear();
+          for (const s of selected) draggingKeys.add(s);
+          makeGhosts();
+        } else {
+          if (k) selected.clear();             // every new click starts fresh
+          selecting = true;
+          selectAtCursor();
+        }
+      }
+    });
+    window.addEventListener('mousemove', e => {
+      if (dragging) moveGhosts(e.clientX - downX, e.clientY - downY);
+    });
+    window.addEventListener('mouseup', e => {
+      if (e.button === 1) {
+        panning = false;
+        if (performance.now() - lastPanT > 80) { panVX = 0; panVY = 0; }  // held still before release: no glide
+      }
+      if (e.button === 0) {
+        selecting = false;
+        if (dragging) {
+          dragging = false;
+          const el = document.elementFromPoint(e.clientX, e.clientY);
+          const binEl = el && el.closest('.bin');
+          const moved = Math.hypot(e.clientX - downX, e.clientY - downY) > 6;
+          const di = binEl ? Number(binEl.dataset.idx) : -1;
+          if (di >= 0 && bins[di].pct < 100 && !bins[di].busy) {
+            flightToBin(di);                                // deposits after numbers fall in
+          } else if (!moved && downKey) {
+            abortDrag();
+            selected.clear(); selected.add(downKey);        // click on a selected number: reselect just it
+          } else {
+            abortDrag();                                    // dropped off-target: numbers return
+          }
+          downKey = null;
+        }
+      }
+    });
+    window.addEventListener('keydown', e => {
+      if (selected.size && e.key >= '1' && e.key <= '5' && bins[Number(e.key) - 1].pct < 100) {
+        depositToBin(Number(e.key) - 1);
+      }
+    });
+    field.addEventListener('wheel', e => {
+      e.preventDefault();
+      if (selected.size) selected.clear();
+      targetX += e.deltaX;
+      targetY += e.deltaY;
+    }, { passive: false });
+
+
+    function tick(t) {
+      const time = t * 0.001;
+      const dt = lastT ? Math.min((t - lastT) / 1000, 0.1) : 0;
+      lastT = t;
+      const a = 1 - Math.exp(-dt / EASE_TAU);
+      if (!panning && (Math.abs(panVX) > 5 || Math.abs(panVY) > 5)) {
+        targetX += panVX * dt;                  // release momentum
+        targetY += panVY * dt;
+        const friction = Math.exp(-dt / 0.6);   // glide dies out over ~1s
+        panVX *= friction; panVY *= friction;
+      }
+      offX += (targetX - offX) * a;
+      offY += (targetY - offY) * a;
+
+      const startCol = Math.floor(offX / cellW) - BUF;
+      const startRow = Math.floor(offY / cellH) - BUF;
+
+      let idx = 0;
+      for (let j = 0; j < POOL_R; j++) {
+        for (let i = 0; i < POOL_C; i++) {
+          const cell = pool[idx++];
+          const wc = startCol + i;
+          const wr = startRow + j;
+
+          const boxX = wc * cellW - offX;
+          const boxY = wr * cellH - offY;
+          cell.root.style.transform = `translate(${boxX}px, ${boxY}px)`;
+
+          const isDrag = draggingKeys.has(wc + ',' + wr);
+          const d = isDrag ? '' : digitAt(wc, wr);
+          if (d !== cell.lastDigit) { cell.floatEl.textContent = d; cell.lastDigit = d; }
+
+          const sel = !isDrag && selected.has(wc + ',' + wr);
+          if (sel !== cell.lastSel) { cell.scaleEl.classList.toggle('sel', sel); cell.lastSel = sel; }
+
+          if (isDrag) {
+            // empty gap where the numbers were lifted from
+            cell.floatEl.style.transform = 'translate(0px, 0px)';
+            cell.scaleEl.style.transform = 'scale(1)';
+            cell.scaleEl.style.opacity = 1;
+            cell.root.style.zIndex = '';
+          } else if (sel) {
+            // locked: white, no drift, held at 3.5x
+            cell.floatEl.style.transform = 'translate(0px, 0px)';
+            cell.scaleEl.style.transform = 'scale(3.5)';
+            cell.scaleEl.style.opacity = 1;
+            cell.root.style.zIndex = 100;
+          } else {
+            // stable drift per world coordinate (halved amplitude)
+            const ax = 1 + hash2(wc, wr, 1) * 2;
+            const ay = 1 + hash2(wc, wr, 2) * 2;
+            const fx = 0.4 + hash2(wc, wr, 3) * 0.6;
+            const fy = 0.4 + hash2(wc, wr, 4) * 0.6;
+            const px = hash2(wc, wr, 5) * 6.283;
+            const py = hash2(wc, wr, 6) * 6.283;
+            const ox = Math.sin(time * fx + px) * ax;
+            const oy = Math.cos(time * fy + py) * ay;
+            cell.floatEl.style.transform = `translate(${ox}px, ${oy}px)`;
+
+            // proximity scale, logarithmic falloff
+            const cx = boxX + cellW / 2;
+            const cy = boxY + cellH / 2;
+            const dist = Math.hypot(cx - mx, cy - my);
+            let scale = 1, op = 1;
+            if (dist < RADIUS) {
+              const falloff = 1 - Math.log(1 + dist) / logDenom;
+              scale = 1 + (MAX_SCALE - 1) * falloff;
+              op = 1 - (0.01 + 0.49 * falloff);
+            }
+            cell.scaleEl.style.transform = `scale(${scale})`;
+            cell.scaleEl.style.opacity = op;
+            cell.root.style.zIndex = scale > 1.01 ? Math.round(scale * 10) : '';
+          }
+        }
+      }
+      requestAnimationFrame(tick);
+    }
+
+    document.fonts.ready.then(() => { sizeCells(); requestAnimationFrame(tick); });
+    requestAnimationFrame(tick);
+
+    // ---- player entry / identity ----
+    // The name entered here replaces the file name in the header and is the key
+    // under which this refiner's progress is stored, ready to be centralized later.
+    const NAME_KEY = 'mdr.playerName';
+    const SCORE_KEY = 'mdr.scores';
+    const entry = document.getElementById('entry');
+    const entryForm = document.getElementById('entry-form');
+    const nameInput = document.getElementById('name-input');
+    const puzzleEl = document.querySelector('.puzzle');
+    let playerName = '';
+
+    // reuse the header's Lumon globe for the boot screen
+    const logoSrc = document.querySelector('.lumon');
+    if (logoSrc) {
+      const clone = logoSrc.cloneNode(true);
+      clone.removeAttribute('class');
+      document.getElementById('entry-logo').appendChild(clone);
+    }
+
+    // convenience: pre-fill with the last refiner's name
+    const lastName = localStorage.getItem(NAME_KEY);
+    if (lastName) nameInput.value = lastName;
+
+    function persistScores() {
+      if (!playerName) return;
+      let store = {};
+      try { store = JSON.parse(localStorage.getItem(SCORE_KEY) || '{}'); } catch (e) { store = {}; }
+      store[playerName] = {
+        name: playerName,
+        bins: bins.map(b => Math.round(b.pct)),
+        complete: Math.round(bins.reduce((s, b) => s + b.pct, 0) / bins.length),
+        updated: Date.now(),
+      };
+      try { localStorage.setItem(SCORE_KEY, JSON.stringify(store)); } catch (e) {}
+    }
+    // exposed so a future score-syncing layer can read the current record
+    window.mdrGetScores = () => { try { return JSON.parse(localStorage.getItem(SCORE_KEY) || '{}'); } catch (e) { return {}; } };
+
+    function beginSession(name) {
+      playerName = name;
+      sessionStart = performance.now();      // start the clock for this refiner's time
+      localStorage.setItem(NAME_KEY, name);
+      puzzleEl.textContent = name;           // the refiner's name stands in for "Cold Harbor"
+      persistScores();                       // seed the record at 0%
+      entry.classList.add('hide');
+      setTimeout(() => { entry.style.display = 'none'; }, 650);
+    }
+
+    entryForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = nameInput.value.trim().replace(/\s+/g, ' ');
+      if (!name) {                           // no empty names — nudge the field
+        entry.classList.remove('shake');
+        void entry.offsetWidth;              // restart the animation
+        entry.classList.add('shake');
+        nameInput.focus();
+        return;
+      }
+      beginSession(name);
+    });
+
+    nameInput.focus();
+
+    // ---- end-game (Waffle Party) screen ----
+    let sessionStart = performance.now();
+    const endScreen = document.getElementById('endscreen');
+    const endName = document.getElementById('end-name');
+    const endBoard = document.getElementById('end-board');
+    const completeEl = document.querySelector('.complete');
+
+    // reuse the Lumon globe up top
+    if (logoSrc) {
+      const endLogo = logoSrc.cloneNode(true);
+      endLogo.removeAttribute('class');
+      document.getElementById('end-logo').appendChild(endLogo);
+    }
+
+    // record this refiner's completion time (keep their best) for the shared board
+    function recordTime(name, timeSec) {
+      if (!name) return;
+      let store = {};
+      try { store = JSON.parse(localStorage.getItem(SCORE_KEY) || '{}'); } catch (e) { store = {}; }
+      const rec = store[name] || { name, bins: [0, 0, 0, 0, 0], complete: 0, updated: Date.now() };
+      if (typeof rec.time !== 'number' || timeSec < rec.time) rec.time = timeSec;
+      rec.name = name;
+      rec.updated = Date.now();
+      store[name] = rec;
+      try { localStorage.setItem(SCORE_KEY, JSON.stringify(store)); } catch (e) {}
+    }
+
+    // the leaderboard of fellow refiners, fastest first, from stored scores
+    function renderBoard() {
+      const store = window.mdrGetScores();
+      const rows = Object.values(store)
+        .filter(r => typeof r.time === 'number')
+        .sort((a, b) => a.time - b.time);
+      const list = rows.length
+        ? rows
+        : (playerName ? [{ name: playerName, time: (performance.now() - sessionStart) / 1000 }] : []);
+      endBoard.textContent = '';
+      for (const r of list) {
+        const li = document.createElement('li');
+        li.className = 'end-row';
+        const n = document.createElement('span');
+        n.textContent = r.name;                 // textContent keeps user names inert
+        const t = document.createElement('span');
+        t.textContent = r.time.toFixed(1) + 's';
+        li.append(n, t);
+        endBoard.appendChild(li);
+      }
+    }
+
+    function showEndScreen() {
+      recordTime(playerName, (performance.now() - sessionStart) / 1000);
+      endName.textContent = playerName || 'Refiner';
+      renderBoard();
+      endScreen.classList.add('show');
+      const v = endScreen.querySelector('video');
+      if (v) { try { v.currentTime = 0; v.play(); } catch (e) {} }
+    }
+    function hideEndScreen() { endScreen.classList.remove('show'); }
+
+    // all five bins full → celebrate (delay lets the last bar finish filling)
+    function checkComplete() {
+      if (bins.every(b => b.pct >= 100)) setTimeout(showEndScreen, 900);
+    }
+
+    // TEST HOOK: click the "% Complete" readout to preview the end screen
+    completeEl.style.cursor = 'pointer';
+    completeEl.title = 'Preview end screen (test)';
+    completeEl.addEventListener('click', () => {
+      endScreen.classList.contains('show') ? hideEndScreen() : showEndScreen();
+    });
+    // dismiss by clicking the backdrop or pressing Escape
+    endScreen.addEventListener('click', e => { if (e.target === endScreen) hideEndScreen(); });
+    window.addEventListener('keydown', e => { if (e.key === 'Escape') hideEndScreen(); });
+  </script>
+</body>
+</html>

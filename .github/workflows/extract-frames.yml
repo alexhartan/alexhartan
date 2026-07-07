@@ -1,0 +1,66 @@
+name: Extract scroll-scrub frames
+
+# Runs when the frame job file changes on this branch; reads clip URLs from it,
+# extracts WebP frame sequences with ffmpeg, and commits them back to the branch.
+on:
+  push:
+    branches:
+      - claude/alex-hartan-portfolio-vpk6be
+    paths:
+      - .frame-job.json
+      - .github/workflows/extract-frames.yml
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          ffmpeg -version | head -1
+
+      - name: Download clips
+        run: |
+          mkdir -p /tmp/clips
+          for name in hero pillars work; do
+            url=$(jq -r ".${name}_url" .frame-job.json)
+            curl -fsSL "$url" -o "/tmp/clips/$name.mp4"
+          done
+          ls -la /tmp/clips
+
+      - name: Extract frames
+        run: |
+          FPS=$(jq -r '.fps // "14"' .frame-job.json)
+          WIDTH=$(jq -r '.width // "1600"' .frame-job.json)
+          HEIGHT=$(( WIDTH * 9 / 16 ))
+          rm -rf public/frames
+          for name in hero pillars work; do
+            mkdir -p "public/frames/$name"
+            ffmpeg -hide_banner -loglevel error -i "/tmp/clips/$name.mp4" \
+              -vf "fps=${FPS},scale=${WIDTH}:${HEIGHT}:flags=lanczos" \
+              -c:v libwebp -lossless 0 -compression_level 6 -q:v 62 \
+              "public/frames/$name/f-%04d.webp"
+            echo "$name: $(ls public/frames/$name | wc -l) frames"
+          done
+          python3 - <<'EOF'
+          import json, os
+          manifest = {}
+          for name in ["hero", "pillars", "work"]:
+              manifest[name] = {"count": len(os.listdir(f"public/frames/{name}"))}
+          with open("public/frames/manifest.json", "w") as f:
+              json.dump(manifest, f)
+          print(manifest)
+          EOF
+          du -sh public/frames/*
+
+      - name: Commit frames
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898024+github-actions[bot]@users.noreply.github.com"
+          git add public/frames
+          git diff --cached --quiet || { git commit -m "Add scroll-scrub frame sequences extracted from Seedance clips"; git push; }

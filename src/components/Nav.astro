@@ -1,95 +1,31 @@
 ---
 import Logo from './Logo.astro';
-
-const links = [
-  { href: '#about', label: 'About' },
-  { href: '#services', label: 'What I do' },
-  { href: '#process', label: 'Process' },
-  { href: '#play', label: 'Off the clock' },
-  { href: '#contact', label: 'Contact' },
-];
 ---
 
-<header
-  id="nav"
-  class="fixed inset-x-0 top-0 z-60 transition-[transform,background-color,border-color] duration-500 [&.nav-scrolled]:border-b [&.nav-scrolled]:border-line [&.nav-scrolled]:bg-bg/85 [&.nav-scrolled]:backdrop-blur-md"
->
-  <div class="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-4 md:px-10 md:py-5">
+<header class="fixed inset-x-0 top-0 z-[80]">
+  <nav
+    class="mx-auto flex max-w-[1500px] items-center justify-between px-5 py-5 md:px-10"
+    aria-label="Main"
+  >
     <a href="#top" class="flex items-center gap-3" aria-label="Alex Hartan — back to top">
-      <Logo class="h-7 text-ink md:h-8" />
-      <span class="font-display hidden text-sm font-semibold tracking-[0.18em] uppercase sm:block">
-        Alex Hartan
-      </span>
+      <Logo class="h-7 md:h-8" />
     </a>
 
-    <nav class="hidden items-center gap-8 lg:flex" aria-label="Primary">
-      {
-        links.map((l, i) => (
-          <a
-            href={l.href}
-            class="group font-display text-[13px] font-medium tracking-[0.14em] uppercase text-mute transition-colors hover:text-ink"
-          >
-            <span class="mr-1.5 text-volt/70">0{i + 1}</span>
-            {l.label}
-            <span class="block h-px max-w-0 bg-volt transition-all duration-400 group-hover:max-w-full" />
-          </a>
-        ))
-      }
-    </nav>
-
-    <div class="flex items-center gap-3">
-      <a
-        href="mailto:alex@galvanite.io"
-        data-magnetic
-        class="font-display hidden rounded-full border border-volt/60 px-5 py-2 text-[13px] font-semibold tracking-[0.14em] uppercase text-volt transition-colors duration-300 hover:bg-volt hover:text-void sm:inline-block"
-      >
-        Let's talk
-      </a>
-
-      <button
-        id="burger"
-        class="relative z-70 grid h-11 w-11 place-items-center rounded-full border border-line lg:hidden"
-        aria-label="Toggle menu"
-        aria-expanded="false"
-        aria-controls="menu"
-      >
-        <span class="relative block h-2.5 w-5">
-          <span
-            class="absolute top-0 left-0 h-0.5 w-full bg-ink transition-all duration-300 in-[.menu-open]:top-1 in-[.menu-open]:rotate-45"
-          ></span>
-          <span
-            class="absolute bottom-0 left-0 h-0.5 w-full bg-ink transition-all duration-300 in-[.menu-open]:bottom-1 in-[.menu-open]:-rotate-45"
-          ></span>
-        </span>
-      </button>
+    <div class="font-display hidden items-center gap-8 text-[11px] tracking-[0.24em] uppercase md:flex">
+      <a href="#pillars" class="text-cream/70 transition-colors hover:text-volt">What I do</a>
+      <a href="#work" class="text-cream/70 transition-colors hover:text-volt">Work</a>
+      <a href="#process" class="text-cream/70 transition-colors hover:text-volt">How I work</a>
     </div>
-  </div>
-</header>
 
-<!-- mobile overlay menu -->
-<div
-  id="menu"
-  aria-hidden="true"
-  class="bg-grid pointer-events-none fixed inset-0 z-59 flex flex-col justify-between bg-void/95 px-6 pt-28 pb-10 opacity-0 backdrop-blur-xl transition-opacity duration-400 in-[.menu-open]:pointer-events-auto in-[.menu-open]:opacity-100 lg:hidden"
->
-  <nav class="flex flex-col gap-2" aria-label="Mobile">
-    {
-      links.map((l, i) => (
-        <a
-          href={l.href}
-          class="group font-display flex items-baseline gap-4 py-2 text-4xl font-bold tracking-tight uppercase transition-[opacity,translate] duration-500 sm:text-5xl"
-          style={`transition-delay:${80 + i * 60}ms`}
-        >
-          <span class="text-sm text-volt">0{i + 1}</span>
-          <span class="transition-colors group-hover:text-volt">{l.label}</span>
-        </a>
-      ))
-    }
-  </nav>
-  <div class="flex items-end justify-between border-t border-line pt-6">
-    <a href="mailto:alex@galvanite.io" class="text-mute underline-offset-4 hover:text-volt hover:underline">
-      alex@galvanite.io
+    <a
+      href="mailto:alex@galvanite.io"
+      class="font-display inline-flex items-center gap-2 border border-line bg-void/40 px-5 py-2.5 text-[11px] tracking-[0.2em] uppercase backdrop-blur-sm transition-colors hover:border-volt hover:text-volt"
+    >
+      <span class="relative flex h-1.5 w-1.5">
+        <span class="pulse-dot absolute inset-0" aria-hidden="true"></span>
+        <span class="relative h-1.5 w-1.5 rounded-full bg-volt"></span>
+      </span>
+      Start a project
     </a>
-    <span class="font-display text-xs tracking-[0.2em] text-mute uppercase">Craiova, RO</span>
-  </div>
-</div>
+  </nav>
+</header>
