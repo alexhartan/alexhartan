@@ -6,7 +6,7 @@
 <title>Macrodata Refinement</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0a1726;
@@ -184,32 +184,28 @@
 
   /* ---- player entry / identity screen ---- */
   #entry {
+    /* the field text size; button label and tagline derive from it */
+    --field-fs: clamp(26px, 3.4vw, 44px);
     position: fixed;
     inset: 0;
     z-index: 1000;
     background: var(--bg);
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: clamp(30px, 6vh, 66px);
+    align-items: center;      /* form centered on screen; */
+    justify-content: center;  /* logo + tagline are pinned separately */
     padding: 24px;
     transition: opacity 0.6s ease;
   }
   #entry.hide { opacity: 0; pointer-events: none; }
   .entry-logo {
+    position: absolute;
+    top: clamp(40px, 7vh, 92px);
+    left: 50%;
+    transform: translateX(-50%);
     width: clamp(120px, 17vw, 210px);
     filter: drop-shadow(0 0 8px rgba(128, 234, 255, 0.6));
   }
   .entry-logo svg { display: block; width: 100%; height: auto; }
-  .entry-title {
-    font-size: clamp(20px, 3vw, 34px);
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    text-align: center;
-    color: var(--fg);
-    user-select: none;
-  }
   .entry-form {
     display: flex;
     align-items: stretch;
@@ -226,7 +222,7 @@
     color: var(--fg);
     caret-color: var(--fg);
     font-family: 'VT323', monospace;
-    font-size: clamp(26px, 3.4vw, 44px);
+    font-size: var(--field-fs);
     letter-spacing: 0.03em;
     padding: 10px 22px;
     outline: none;
@@ -242,12 +238,11 @@
   #get-severed {
     flex: 0 0 auto;
     background: var(--fg);
-    color: var(--bg);
+    color: var(--bg);                       /* navy label */
     border: 1.5px solid var(--fg);
-    font-family: 'Silkscreen', 'VT323', monospace;
-    font-weight: 700;
-    font-size: clamp(15px, 1.7vw, 22px);
-    letter-spacing: 0.1em;
+    font-family: 'VT323', monospace;        /* match the field */
+    font-size: calc(var(--field-fs) * 0.7); /* 70% of field text */
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     padding: 0 clamp(24px, 3vw, 40px);
     cursor: inherit;
@@ -257,7 +252,12 @@
   #get-severed:hover { filter: brightness(1.12); }
   #get-severed:active { transform: translateY(1px); }
   .entry-tagline {
-    font-size: clamp(15px, 1.8vw, 24px);
+    position: absolute;
+    bottom: clamp(36px, 7vh, 84px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    font-size: calc(var(--field-fs) * 0.7); /* same as the button label */
     letter-spacing: 0.08em;
     text-align: center;
     color: color-mix(in srgb, var(--fg) 70%, transparent);
@@ -276,7 +276,6 @@
 <body>
   <div id="entry">
     <div class="entry-logo" id="entry-logo"></div>
-    <div class="entry-title">Macrodata Refinement</div>
     <form class="entry-form" id="entry-form" autocomplete="off">
       <input id="name-input" type="text" placeholder="Player Name" maxlength="24"
              spellcheck="false" autocomplete="off" aria-label="Player name">
