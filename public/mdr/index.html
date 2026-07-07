@@ -271,6 +271,78 @@
     80% { transform: translateX(6px); }
   }
   #entry.shake .entry-form { animation: entryShake 0.32s ease; }
+
+  /* ---- end-game (Waffle Party) screen ---- */
+  #endscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: none;
+    background: var(--bg);
+    color: var(--fg);
+    padding: clamp(28px, 4.5vw, 64px);
+    cursor: pointer;
+  }
+  #endscreen.show { display: block; }
+  .end-logo {
+    position: absolute;
+    top: clamp(28px, 4.5vw, 64px);
+    left: clamp(28px, 4.5vw, 64px);
+    width: clamp(120px, 12vw, 182px);
+    filter: drop-shadow(0 0 8px rgba(128, 234, 255, 0.6));
+  }
+  .end-logo svg { display: block; width: 100%; height: auto; }
+  .end-video {
+    position: absolute;
+    top: clamp(40px, 6vh, 96px);
+    right: clamp(20px, 3.5vw, 56px);
+    width: clamp(280px, 42vw, 640px);
+    height: auto;
+    filter: drop-shadow(0 0 12px rgba(128, 234, 255, 0.35));
+  }
+  .end-content {
+    position: absolute;
+    left: clamp(28px, 4.5vw, 64px);
+    top: clamp(150px, 24vh, 260px);
+    width: min(52%, 760px);
+  }
+  .end-heading {
+    font-size: clamp(20px, 2.5vw, 40px);
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+    margin-bottom: clamp(36px, 8vh, 92px);
+  }
+  .end-subhead {
+    font-size: clamp(16px, 1.7vw, 26px);
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+  }
+  .end-board { list-style: none; }
+  .end-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: clamp(7px, 1vh, 13px) 4px;
+    border-top: 1px solid color-mix(in srgb, var(--fg) 35%, transparent);
+    font-size: clamp(16px, 1.8vw, 28px);
+  }
+  .end-row:last-child { border-bottom: 1px solid color-mix(in srgb, var(--fg) 35%, transparent); }
+  .end-praise {
+    position: absolute;
+    right: clamp(28px, 4.5vw, 64px);
+    bottom: clamp(22px, 4vw, 54px);
+    font-size: clamp(22px, 2.6vw, 40px);
+    letter-spacing: 0.02em;
+  }
+  @media (max-width: 820px) {
+    #endscreen.show { display: flex; flex-direction: column; }
+    .end-logo, .end-video, .end-content, .end-praise { position: static; }
+    .end-video { width: min(60vw, 300px); margin: 60px auto 0; }
+    .end-content { width: auto; margin-top: 32px; }
+    .end-heading { margin-bottom: 28px; }
+    .end-praise { align-self: flex-end; margin-top: 20px; }
+  }
 </style>
 </head>
 <body>
@@ -321,6 +393,18 @@
     </div>
   </footer>
   <div id="ghost-layer"></div>
+  <div id="endscreen" aria-hidden="true">
+    <div class="end-logo" id="end-logo"></div>
+    <video class="end-video" autoplay loop muted playsinline>
+      <source src="waffleparty.mp4" type="video/mp4">
+    </video>
+    <div class="end-content">
+      <p class="end-heading"><span id="end-name">Refiner</span>, the Board acknowledges your completed file. Your steadfast industry has authorized a Waffle Party!</p>
+      <p class="end-subhead">The exemplary yields of your fellow Refiners:</p>
+      <ul class="end-board" id="end-board"></ul>
+    </div>
+    <div class="end-praise">Praise Kier!</div>
+  </div>
   <script>
     const COLS = 14, ROWS = 8;          // visible matrix
     const BUF = 1;                       // buffer ring for seamless scroll
@@ -353,6 +437,7 @@
       const b = bins[i];
       b.fill.style.width = b.pct + '%';
       b.pctEl.textContent = b.pct + '%';
+      b.pctEl.style.color = b.pct >= 50 ? 'var(--bg)' : 'var(--fg)';  // readable once the fill covers it
     }
     function updateGlobal() {
       const avg = Math.round(bins.reduce((s, b) => s + b.pct, 0) / bins.length);
@@ -381,6 +466,7 @@
       tween(from, to, dur || 600, v => {
         b.fill.style.width = v + '%';
         b.pctEl.textContent = Math.round(v) + '%';
+        b.pctEl.style.color = v >= 50 ? 'var(--bg)' : 'var(--fg)';  // navy over the cyan fill
       }, done);
     }
     function animateGlobal() {
@@ -416,6 +502,7 @@
         animateBin(i, from, b.pct);
         animateGlobal();
         persistScores();
+        checkComplete();                             // all bins full → Waffle Party
       }
     }
 
@@ -710,6 +797,7 @@
 
     function beginSession(name) {
       playerName = name;
+      sessionStart = performance.now();      // start the clock for this refiner's time
       localStorage.setItem(NAME_KEY, name);
       puzzleEl.textContent = name;           // the refiner's name stands in for "Cold Harbor"
       persistScores();                       // seed the record at 0%
@@ -731,6 +819,80 @@
     });
 
     nameInput.focus();
+
+    // ---- end-game (Waffle Party) screen ----
+    let sessionStart = performance.now();
+    const endScreen = document.getElementById('endscreen');
+    const endName = document.getElementById('end-name');
+    const endBoard = document.getElementById('end-board');
+    const completeEl = document.querySelector('.complete');
+
+    // reuse the Lumon globe up top
+    if (logoSrc) {
+      const endLogo = logoSrc.cloneNode(true);
+      endLogo.removeAttribute('class');
+      document.getElementById('end-logo').appendChild(endLogo);
+    }
+
+    // record this refiner's completion time (keep their best) for the shared board
+    function recordTime(name, timeSec) {
+      if (!name) return;
+      let store = {};
+      try { store = JSON.parse(localStorage.getItem(SCORE_KEY) || '{}'); } catch (e) { store = {}; }
+      const rec = store[name] || { name, bins: [0, 0, 0, 0, 0], complete: 0, updated: Date.now() };
+      if (typeof rec.time !== 'number' || timeSec < rec.time) rec.time = timeSec;
+      rec.name = name;
+      rec.updated = Date.now();
+      store[name] = rec;
+      try { localStorage.setItem(SCORE_KEY, JSON.stringify(store)); } catch (e) {}
+    }
+
+    // the leaderboard of fellow refiners, fastest first, from stored scores
+    function renderBoard() {
+      const store = window.mdrGetScores();
+      const rows = Object.values(store)
+        .filter(r => typeof r.time === 'number')
+        .sort((a, b) => a.time - b.time);
+      const list = rows.length
+        ? rows
+        : (playerName ? [{ name: playerName, time: (performance.now() - sessionStart) / 1000 }] : []);
+      endBoard.textContent = '';
+      for (const r of list) {
+        const li = document.createElement('li');
+        li.className = 'end-row';
+        const n = document.createElement('span');
+        n.textContent = r.name;                 // textContent keeps user names inert
+        const t = document.createElement('span');
+        t.textContent = r.time.toFixed(1) + 's';
+        li.append(n, t);
+        endBoard.appendChild(li);
+      }
+    }
+
+    function showEndScreen() {
+      recordTime(playerName, (performance.now() - sessionStart) / 1000);
+      endName.textContent = playerName || 'Refiner';
+      renderBoard();
+      endScreen.classList.add('show');
+      const v = endScreen.querySelector('video');
+      if (v) { try { v.currentTime = 0; v.play(); } catch (e) {} }
+    }
+    function hideEndScreen() { endScreen.classList.remove('show'); }
+
+    // all five bins full → celebrate (delay lets the last bar finish filling)
+    function checkComplete() {
+      if (bins.every(b => b.pct >= 100)) setTimeout(showEndScreen, 900);
+    }
+
+    // TEST HOOK: click the "% Complete" readout to preview the end screen
+    completeEl.style.cursor = 'pointer';
+    completeEl.title = 'Preview end screen (test)';
+    completeEl.addEventListener('click', () => {
+      endScreen.classList.contains('show') ? hideEndScreen() : showEndScreen();
+    });
+    // dismiss by clicking the backdrop or pressing Escape
+    endScreen.addEventListener('click', e => { if (e.target === endScreen) hideEndScreen(); });
+    window.addEventListener('keydown', e => { if (e.key === 'Escape') hideEndScreen(); });
   </script>
 </body>
 </html>
