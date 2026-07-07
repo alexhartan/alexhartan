@@ -64,7 +64,7 @@
     gap: clamp(16px, 3vw, 40px);
     padding: 36px clamp(36px, 5vw, 68px) 16px;
     background: var(--bg);
-    border-bottom: 1.5px solid var(--fg);
+    border-bottom: 3px double var(--fg);   /* two 1px lines, 1px gap */
   }
   .name-box {
     flex: 1;
@@ -72,7 +72,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    border: 1.5px solid var(--fg);
+    border: 1px solid var(--fg);
     padding: 8px 22px;
   }
   .puzzle {
@@ -101,10 +101,10 @@
     z-index: 300;
     display: flex;
     justify-content: center;
-    gap: clamp(10px, 1.6vw, 18px);
+    gap: clamp(16px, 2.56vw, 28.8px);      /* +60% spacing between bins */
     padding: 18px clamp(36px, 5vw, 68px) 38px;
     background: var(--bg);
-    border-top: 1.5px solid var(--fg);
+    border-top: 3px double var(--fg);      /* two 1px lines, 1px gap */
   }
   .bin {
     flex: 1 1 0;
@@ -118,7 +118,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1.5px solid var(--fg);
+    border: 1px solid var(--fg);
   }
   .bin-id span {
     font-size: clamp(20px, 2.4vw, 32px);
@@ -129,7 +129,7 @@
   .bin-bar {
     position: relative;
     height: 40px;
-    border: 1.5px solid var(--fg);
+    border: 1px solid var(--fg);
     overflow: hidden;
   }
   .bin-fill {
