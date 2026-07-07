@@ -53,6 +53,12 @@
     user-select: none;
     will-change: transform;
   }
+  /* staggered fade-in reveal of the number field when a session begins */
+  @keyframes mdrReveal { from { opacity: 0; } to { opacity: 1; } }
+  #field.reveal .float {
+    animation: mdrReveal 0.4s ease-in both;
+    animation-delay: var(--reveal-delay, 0s);   /* random 0–0.6s per cell */
+  }
   #hud {
     position: fixed;
     top: -1.25vw;
@@ -293,8 +299,9 @@
   .end-logo svg { display: block; width: 100%; height: auto; }
   .end-video {
     position: absolute;
-    top: 6vh;
+    top: 50%;
     right: 3.5vw;
+    transform: translateY(-50%);   /* vertically centered on screen */
     width: 40vw;
     height: auto;
     /* soft-fade all four edges (~10%) so the video melts into the background */
@@ -314,7 +321,7 @@
     width: 52%;
   }
   .end-heading {
-    font-size: 2.5vw;
+    font-size: 2.3vw;
     line-height: 1.25;
     letter-spacing: 0.01em;
     margin-bottom: 8vh;
@@ -341,7 +348,7 @@
     bottom: 3.375vw;
     font-size: 1.5vw;
     line-height: 1.5;
-    text-align: right;
+    text-align: left;
     letter-spacing: 0.02em;
   }
   .end-praise a {
@@ -582,6 +589,7 @@
       scaleEl.className = 'scale';
       const floatEl = document.createElement('span');
       floatEl.className = 'float';
+      floatEl.style.setProperty('--reveal-delay', (Math.random() * 0.6).toFixed(3) + 's');  // random stagger
       scaleEl.appendChild(floatEl);
       root.appendChild(scaleEl);
       field.appendChild(root);
@@ -813,7 +821,7 @@
       puzzleEl.textContent = name;           // the refiner's name stands in for "Cold Harbor"
       persistScores();                       // seed the record at 0%
       entry.classList.add('hide');
-      setTimeout(() => { entry.style.display = 'none'; }, 650);
+      setTimeout(() => { entry.style.display = 'none'; field.classList.add('reveal'); }, 650);
     }
 
     entryForm.addEventListener('submit', e => {
