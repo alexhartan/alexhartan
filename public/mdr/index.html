@@ -62,7 +62,7 @@
     display: flex;
     align-items: center;
     gap: 2.5vw;
-    padding: 2.25vw 4.25vw 1vw;
+    padding: 4vw 8vw 1.5vw;
     background: var(--bg);
     border-bottom: 3px double var(--fg);   /* two 1px lines, 1px gap */
   }
@@ -102,7 +102,7 @@
     display: flex;
     justify-content: center;
     gap: 1.8vw;                            /* +60% spacing between bins */
-    padding: 1.125vw 4.25vw 2.375vw;
+    padding: 1.5vw 8vw 4vw;
     background: var(--bg);
     border-top: 3px double var(--fg);      /* two 1px lines, 1px gap */
   }
@@ -281,7 +281,6 @@
     background: var(--bg);
     color: var(--fg);
     padding: 4vw;
-    cursor: pointer;
   }
   #endscreen.show { display: block; }
   .end-logo {
@@ -340,16 +339,15 @@
     position: absolute;
     right: 4vw;
     bottom: 3.375vw;
-    font-size: 2.5vw;
+    font-size: 1.5vw;
+    line-height: 1.5;
+    text-align: right;
     letter-spacing: 0.02em;
   }
-  @media (max-width: 820px) {
-    #endscreen.show { display: flex; flex-direction: column; }
-    .end-logo, .end-video, .end-content, .end-praise { position: static; }
-    .end-video { width: min(60vw, 300px); margin: 60px auto 0; }
-    .end-content { width: auto; margin-top: 32px; }
-    .end-heading { margin-bottom: 28px; }
-    .end-praise { align-self: flex-end; margin-top: 20px; }
+  .end-praise a {
+    color: inherit;
+    text-decoration: underline;
+    cursor: pointer;
   }
 </style>
 </head>
@@ -411,7 +409,10 @@
       <p class="end-subhead">The exemplary yields of your fellow Refiners:</p>
       <ul class="end-board" id="end-board"></ul>
     </div>
-    <div class="end-praise">Praise Kier!</div>
+    <div class="end-praise">
+      Hand-crafted by <a href="https://www.linkedin.com/in/alexhartan/" target="_blank" rel="noopener noreferrer">Alex Hartan</a><br>
+      <a href="https://www.galvanite.io" target="_blank" rel="noopener noreferrer">Galvanite.io</a> Dept.
+    </div>
   </div>
   <script>
     const COLS = 14, ROWS = 8;          // visible matrix
@@ -900,8 +901,7 @@
     completeEl.addEventListener('click', () => {
       endScreen.classList.contains('show') ? hideEndScreen() : showEndScreen();
     });
-    // dismiss by clicking the backdrop or pressing Escape
-    endScreen.addEventListener('click', e => { if (e.target === endScreen) hideEndScreen(); });
+    // the end screen isn't dismissible by click; Escape closes it (for testing)
     window.addEventListener('keydown', e => { if (e.key === 'Escape') hideEndScreen(); });
   </script>
 </body>
