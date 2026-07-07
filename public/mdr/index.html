@@ -298,6 +298,15 @@
     right: 3.5vw;
     width: 40vw;
     height: auto;
+    /* soft-fade all four edges (~10%) so the video melts into the background */
+    -webkit-mask-image:
+      linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 10%, #000 90%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 10%, #000 90%, transparent 100%);
+    mask-composite: intersect;
   }
   .end-content {
     position: absolute;
