@@ -325,12 +325,12 @@
     font-size: 2.25vw;
     line-height: 1.25;
     letter-spacing: 0.01em;
-    margin-bottom: 8vh;
+    margin-bottom: 5vh;
   }
   .end-subhead {
-    font-size: 2.5vw;
+    font-size: 2.25vw;
     letter-spacing: 0.02em;
-    margin-bottom: 1.25vw;
+    margin-bottom: 1vw;
   }
   .end-board { list-style: none; }
   .end-row {
@@ -340,13 +340,14 @@
     gap: 1vw;
     padding: 1vh 0.25vw;
     border-top: 1px solid color-mix(in srgb, var(--fg) 35%, transparent);
-    font-size: 1.75vw;
+    font-size: 2.25vw;
   }
   .end-row:last-child { border-bottom: 1px solid color-mix(in srgb, var(--fg) 35%, transparent); }
   .end-praise {
     position: absolute;
     right: 4vw;
     bottom: 3.375vw;
+    margin: 1vw 2vw;
     font-size: 1.5vw;
     line-height: 1.5;
     text-align: left;
@@ -872,7 +873,8 @@
       const store = window.mdrGetScores();
       const rows = Object.values(store)
         .filter(r => typeof r.time === 'number')
-        .sort((a, b) => a.time - b.time);
+        .sort((a, b) => a.time - b.time)   // fastest first
+        .slice(0, 10);                     // top 10 only
       const list = rows.length
         ? rows
         : (playerName ? [{ name: playerName, time: (performance.now() - sessionStart) / 1000 }] : []);
