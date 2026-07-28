@@ -930,9 +930,8 @@
         : (playerName ? [{ name: playerName, time: (performance.now() - sessionStart) / 1000 }] : []);
     }
 
-    // penaltySec is added by the test shortcut so preview runs can't top the board
-    async function showEndScreen(penaltySec = 0) {
-      const timeSec = (performance.now() - sessionStart) / 1000 + penaltySec;
+    async function showEndScreen() {
+      const timeSec = (performance.now() - sessionStart) / 1000;
       recordTime(playerName, timeSec);          // keep a local record too
       endName.textContent = playerName || 'Refiner';
       paintBoard(localBoard());                 // show something instantly
@@ -950,16 +949,6 @@
     function checkComplete() {
       if (bins.every(b => b.pct >= 100)) setTimeout(() => showEndScreen(), 900);
     }
-
-    // TEST SHORTCUT: click the "% Complete" readout to jump straight to the end
-    // screen. Times logged this way carry a +100s penalty so they don't pollute
-    // the leaderboard.
-    const completeEl = document.querySelector('.complete');
-    completeEl.style.cursor = 'pointer';
-    completeEl.title = 'Preview end screen (+100s test penalty)';
-    completeEl.addEventListener('click', () => {
-      endScreen.classList.contains('show') ? hideEndScreen() : showEndScreen(100);
-    });
 
     // Escape closes the end screen
     window.addEventListener('keydown', e => { if (e.key === 'Escape') hideEndScreen(); });
