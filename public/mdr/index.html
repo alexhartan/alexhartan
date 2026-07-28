@@ -348,7 +348,7 @@
     right: 4vw;
     bottom: 3.375vw;
     margin: 1vw 2vw;
-    font-size: 1.5vw;
+    font-size: 1.8vw;
     line-height: 1.5;
     text-align: left;
     letter-spacing: 0.02em;
@@ -783,6 +783,41 @@
     // under which this refiner's progress is stored, ready to be centralized later.
     const NAME_KEY = 'mdr.playerName';
     const SCORE_KEY = 'mdr.scores';
+
+    // ---- shared leaderboard (Supabase REST) ----
+    // The publishable key is meant to live in the client; access is gated by
+    // the table's row-level policies, not by keeping this secret.
+    const SB_URL = 'https://mtyomfuczqvwrdpnjinw.supabase.co';
+    const SB_KEY = 'sb_publishable_jGGUzSViYszzfXHAuPE-BQ_3i2AhoLw';
+    const SB_REST = SB_URL + '/rest/v1/scores';
+    const SB_HEADERS = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY };
+
+    // send this refiner's completion time to the shared board
+    async function submitScore(name, timeSec) {
+      if (!name) return;
+      try {
+        const res = await fetch(SB_REST, {
+          method: 'POST',
+          headers: { ...SB_HEADERS, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body: JSON.stringify({ name: name.slice(0, 24), time_sec: Number(timeSec.toFixed(2)) }),
+        });
+        if (!res.ok) console.warn('[mdr] score submit failed', res.status, await res.text());
+      } catch (e) { console.warn('[mdr] score submit error', e); }
+    }
+
+    // pull the global top 10 (best time per refiner, fastest first)
+    async function fetchBoard() {
+      try {
+        const res = await fetch(SB_REST + '?select=name,time_sec&order=time_sec.asc&limit=200', { headers: SB_HEADERS });
+        if (!res.ok) { console.warn('[mdr] board fetch failed', res.status, await res.text()); return null; }
+        const data = await res.json();
+        const best = new Map();               // rows arrive fastest-first, so first seen per name is their best
+        for (const r of data) {
+          if (!best.has(r.name)) best.set(r.name, { name: r.name, time: Number(r.time_sec) });
+        }
+        return [...best.values()].slice(0, 10);
+      } catch (e) { console.warn('[mdr] board fetch error', e); return null; }
+    }
     const entry = document.getElementById('entry');
     const entryForm = document.getElementById('entry-form');
     const nameInput = document.getElementById('name-input');
@@ -806,6 +841,7 @@
       let store = {};
       try { store = JSON.parse(localStorage.getItem(SCORE_KEY) || '{}'); } catch (e) { store = {}; }
       store[playerName] = {
+        ...(store[playerName] || {}),   // keep any previously recorded best time
         name: playerName,
         bins: bins.map(b => Math.round(b.pct)),
         complete: Math.round(bins.reduce((s, b) => s + b.pct, 0) / bins.length),
@@ -846,7 +882,6 @@
     const endScreen = document.getElementById('endscreen');
     const endName = document.getElementById('end-name');
     const endBoard = document.getElementById('end-board');
-    const completeEl = document.querySelector('.complete');
 
     // reuse the Lumon globe up top
     if (logoSrc) {
@@ -868,16 +903,8 @@
       try { localStorage.setItem(SCORE_KEY, JSON.stringify(store)); } catch (e) {}
     }
 
-    // the leaderboard of fellow refiners, fastest first, from stored scores
-    function renderBoard() {
-      const store = window.mdrGetScores();
-      const rows = Object.values(store)
-        .filter(r => typeof r.time === 'number')
-        .sort((a, b) => a.time - b.time)   // fastest first
-        .slice(0, 10);                     // top 10 only
-      const list = rows.length
-        ? rows
-        : (playerName ? [{ name: playerName, time: (performance.now() - sessionStart) / 1000 }] : []);
+    // paint a list of {name, time} rows into the board, fastest first
+    function paintBoard(list) {
       endBoard.textContent = '';
       for (const r of list) {
         const li = document.createElement('li');
@@ -891,13 +918,30 @@
       }
     }
 
-    function showEndScreen() {
-      recordTime(playerName, (performance.now() - sessionStart) / 1000);
+    // fallback board from this device's stored scores (shown until the shared board loads)
+    function localBoard() {
+      const store = window.mdrGetScores();
+      const rows = Object.values(store)
+        .filter(r => typeof r.time === 'number')
+        .sort((a, b) => a.time - b.time)   // fastest first
+        .slice(0, 10);                     // top 10 only
+      return rows.length
+        ? rows.map(r => ({ name: r.name, time: r.time }))
+        : (playerName ? [{ name: playerName, time: (performance.now() - sessionStart) / 1000 }] : []);
+    }
+
+    async function showEndScreen() {
+      const timeSec = (performance.now() - sessionStart) / 1000;
+      recordTime(playerName, timeSec);          // keep a local record too
       endName.textContent = playerName || 'Refiner';
-      renderBoard();
+      paintBoard(localBoard());                 // show something instantly
       endScreen.classList.add('show');
       const v = endScreen.querySelector('video');
       if (v) { try { v.currentTime = 0; v.play(); } catch (e) {} }
+      // then sync with the shared leaderboard
+      await submitScore(playerName, timeSec);
+      const shared = await fetchBoard();
+      if (shared && shared.length) paintBoard(shared);
     }
     function hideEndScreen() { endScreen.classList.remove('show'); }
 
@@ -906,13 +950,7 @@
       if (bins.every(b => b.pct >= 100)) setTimeout(showEndScreen, 900);
     }
 
-    // TEST HOOK: click the "% Complete" readout to preview the end screen
-    completeEl.style.cursor = 'pointer';
-    completeEl.title = 'Preview end screen (test)';
-    completeEl.addEventListener('click', () => {
-      endScreen.classList.contains('show') ? hideEndScreen() : showEndScreen();
-    });
-    // the end screen isn't dismissible by click; Escape closes it (for testing)
+    // Escape closes the end screen
     window.addEventListener('keydown', e => { if (e.key === 'Escape') hideEndScreen(); });
   </script>
 </body>
